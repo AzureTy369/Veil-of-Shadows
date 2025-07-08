@@ -7,6 +7,7 @@ public class PlayerMovement : MonoBehaviour
 
 	#region COMPONENTS
     public Rigidbody2D RB { get; private set; }
+	public PlayerAnimState CurrentAnimState;
 	#endregion
 
 	#region STATE PARAMETERS
@@ -57,6 +58,11 @@ public class PlayerMovement : MonoBehaviour
 		RB = GetComponent<Rigidbody2D>();
 	}
 
+	void Start()
+	{
+		IsFacingRight = true;
+	}
+
 	public void SetData(PlayerData data)
 	{
 		Data = data;
@@ -67,6 +73,15 @@ public class PlayerMovement : MonoBehaviour
 		_moveInput = input;
 		if (_moveInput.x != 0)
 			CheckDirectionToFace(_moveInput.x > 0);
+		// Set anim state
+		if (LastOnGroundTime > 0)
+		{
+			if (Mathf.Abs(_moveInput.x) > 0.01f)
+				CurrentAnimState = PlayerAnimState.Run;
+			else{
+				CurrentAnimState = PlayerAnimState.Idle;
+			}
+		}
 	}
 
 	public void JumpInput()
@@ -217,6 +232,12 @@ public class PlayerMovement : MonoBehaviour
 		}
 		if (IsSliding)
 			Slide();
+
+		// Set trạng thái Fall nếu đang rơi, không phải WallSlide, không phải Jump
+		if (LastOnGroundTime <= 0 && RB.velocity.y < -0.01f && !IsSliding && !IsJumping && !IsWallJumping)
+		{
+			CurrentAnimState = PlayerAnimState.Fall;
+		}
 	}
 
 	public void SetGravityScale(float scale)
@@ -275,6 +296,7 @@ public class PlayerMovement : MonoBehaviour
 		if (RB.velocity.y < 0)
 			force -= RB.velocity.y;
 		RB.AddForce(Vector2.up * force, ForceMode2D.Impulse);
+		CurrentAnimState = PlayerAnimState.Jump;
 	}
 
 	private void WallJump(int dir)
@@ -290,6 +312,7 @@ public class PlayerMovement : MonoBehaviour
 		if (RB.velocity.y < 0)
 			force.y -= RB.velocity.y;
 		RB.AddForce(force, ForceMode2D.Impulse);
+		CurrentAnimState = PlayerAnimState.Jump;
 	}
 
 	private IEnumerator StartDash(Vector2 dir)
@@ -334,6 +357,7 @@ public class PlayerMovement : MonoBehaviour
 		float movement = speedDif * Data.slideAccel;
 		movement = Mathf.Clamp(movement, -Mathf.Abs(speedDif)  * (1 / Time.fixedDeltaTime), Mathf.Abs(speedDif) * (1 / Time.fixedDeltaTime));
 		RB.AddForce(movement * Vector2.up);
+		CurrentAnimState = PlayerAnimState.WallSlide;
 	}
 
 	public void CheckDirectionToFace(bool isMovingRight)
