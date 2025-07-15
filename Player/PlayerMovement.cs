@@ -53,6 +53,10 @@ public class PlayerMovement : MonoBehaviour
 	[SerializeField] private LayerMask _groundLayer;
 	#endregion
 
+	[Header("Camera")]
+	[SerializeField] private GameObject _cameraFollowGO;
+	private CameraFollowObject _cameraFollowObject;
+	private float _fallSpeedYDampingChangeThreshold;
     private void Awake()
 	{
 		RB = GetComponent<Rigidbody2D>();
@@ -61,6 +65,8 @@ public class PlayerMovement : MonoBehaviour
 	void Start()
 	{
 		IsFacingRight = true;
+		_cameraFollowObject = _cameraFollowGO.GetComponent<CameraFollowObject>();
+		_fallSpeedYDampingChangeThreshold = CameraManager.instance._fallSpeedYDampingChangeThreshold;
 	}
 
 	public void SetData(PlayerData data)
@@ -71,8 +77,8 @@ public class PlayerMovement : MonoBehaviour
 	public void Move(Vector2 input)
 	{
 		_moveInput = input;
-		if (_moveInput.x != 0)
-			CheckDirectionToFace(_moveInput.x > 0);
+		if (_moveInput.x > 0 || _moveInput.x < 0)
+			TurnCheck();
 		// Set anim state
 		if (LastOnGroundTime > 0)
 		{
@@ -138,6 +144,7 @@ public class PlayerMovement : MonoBehaviour
 		{
 			_isJumpCut = false;
 			_isJumpFalling = false;
+			CameraManager.instance.ResetYDamping(); // Đảm bảo Damping luôn trả về mặc định khi chạm đất
 		}
 		if (!IsDashing)
 		{
@@ -282,10 +289,20 @@ public class PlayerMovement : MonoBehaviour
 
 	private void Turn()
 	{
-		Vector3 scale = transform.localScale; 
-		scale.x *= -1;
-		transform.localScale = scale;
-		IsFacingRight = !IsFacingRight;
+		if(IsFacingRight)
+		{
+			Vector3 rotator = new Vector3(transform.rotation.x, 180f, transform.rotation.z);
+			transform.rotation = Quaternion.Euler(rotator);
+			IsFacingRight = !IsFacingRight;
+			_cameraFollowObject.CallTurn();
+		}
+		else
+		{
+			Vector3 rotator = new Vector3(transform.rotation.x, 0f, transform.rotation.z);
+			transform.rotation = Quaternion.Euler(rotator);
+			IsFacingRight = !IsFacingRight;		
+			_cameraFollowObject.CallTurn();
+		}
 	}
 
 	private void Jump()
@@ -360,10 +377,16 @@ public class PlayerMovement : MonoBehaviour
 		CurrentAnimState = PlayerAnimState.WallSlide;
 	}
 
-	public void CheckDirectionToFace(bool isMovingRight)
+	public void TurnCheck()
 	{
-		if (isMovingRight != IsFacingRight)
+		if(_moveInput.x > 0 && !IsFacingRight)
+		{
 			Turn();
+		}
+		else if(_moveInput.x < 0 && IsFacingRight)
+		{
+			Turn();
+		}
 	}
 
 	private bool CanJump()
@@ -402,6 +425,23 @@ public class PlayerMovement : MonoBehaviour
 			return true;
 		else
 			return false;
+	}
+
+	public void InterpolationCamera()
+	{
+		if(RB.velocity.y < _fallSpeedYDampingChangeThreshold && !CameraManager.instance.IsLerpingYDamping
+		&& !CameraManager.instance.LerpedFromPlayerFalling)
+		{
+			CameraManager.instance.LerpYDamping(true);
+		}
+
+		if(RB.velocity.y >= 0f && !CameraManager.instance.IsLerpingYDamping
+		&& CameraManager.instance.LerpedFromPlayerFalling)
+		{
+			CameraManager.instance.LerpedFromPlayerFalling = false;
+
+			CameraManager.instance.LerpYDamping(false);
+		}
 	}
 
 	private void OnDrawGizmosSelected()
