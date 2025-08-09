@@ -3,8 +3,7 @@ using UnityEngine;
 public class PlayerAnimator : MonoBehaviour
 {
     [SerializeField] private Animator animator;
-    [SerializeField] private PlayerMovement movement;
-    private PlayerAnimState lastAnimState;
+    private PlayerMovement movement;
 
     private void Awake()
     {
@@ -12,35 +11,44 @@ public class PlayerAnimator : MonoBehaviour
             movement = GetComponent<PlayerMovement>();
     }
 
-    private void Update()
+    private void OnEnable()
     {
-        var state = movement.CurrentAnimState;
-        if (state != lastAnimState)
+        if (movement == null)
+            movement = GetComponent<PlayerMovement>();
+        if (movement != null)
         {
-            // Reset all parameters to false
-            // animator.SetBool("IsIdle", false);
-            animator.SetBool("IsRunning", false);
-            animator.SetBool("IsJumping", false);
-            animator.SetBool("IsWallSliding", false);
-            animator.SetBool("IsFalling", false);
+            movement.OnAnimStateChanged += HandleStateChanged;
+            HandleStateChanged(movement.CurrentAnimState);
+        }
+    }
 
-            // Set only the current state to true
-            switch (state)
-            {
-                case PlayerAnimState.Run:
-                    animator.SetBool("IsRunning", true);
-                    break;
-                case PlayerAnimState.Jump:
-                    animator.SetBool("IsJumping", true);
-                    break;
-                case PlayerAnimState.Fall:
-                    animator.SetBool("IsFalling", true);
-                    break;
-                case PlayerAnimState.WallSlide:
-                    animator.SetBool("IsWallSliding", true);
-                    break;
-            }
-            lastAnimState = state;
+    private void OnDisable()
+    {
+        if (movement != null)
+            movement.OnAnimStateChanged -= HandleStateChanged;
+    }
+
+    private void HandleStateChanged(PlayerAnimState state)
+    {
+        animator.SetBool("IsRunning", false);
+        animator.SetBool("IsJumping", false);
+        animator.SetBool("IsWallSliding", false);
+        animator.SetBool("IsFalling", false);
+
+        switch (state)
+        {
+            case PlayerAnimState.Run:
+                animator.SetBool("IsRunning", true);
+                break;
+            case PlayerAnimState.Jump:
+                animator.SetBool("IsJumping", true);
+                break;
+            case PlayerAnimState.Fall:
+                animator.SetBool("IsFalling", true);
+                break;
+            case PlayerAnimState.WallSlide:
+                animator.SetBool("IsWallSliding", true);
+                break;
         }
     }
 }
