@@ -33,7 +33,6 @@ public class PlayerController : MonoBehaviour
         {
             movement.DashInput();
         }
-        movement.InterpolationCamera();
     }
 
     private void FixedUpdate()

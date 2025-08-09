@@ -67,7 +67,6 @@ public class PlayerMovement : MonoBehaviour
 	[Header("Camera")]
 	[SerializeField] private GameObject _cameraFollowGO;
 	private CameraFollowObject _cameraFollowObject;
-	private float _fallSpeedYDampingChangeThreshold;
 
 	#region ACTIONS
 	private RunAction _runAction;
@@ -86,7 +85,6 @@ public class PlayerMovement : MonoBehaviour
 	{
 		IsFacingRight = true;
 		_cameraFollowObject = _cameraFollowGO.GetComponent<CameraFollowObject>();
-		_fallSpeedYDampingChangeThreshold = CameraManager.instance._fallSpeedYDampingChangeThreshold;
 		_runAction = new RunAction(this, Data, RB);
 		_jumpAction = new JumpAction(this, Data, RB);
 		_wallJumpAction = new WallJumpAction(this, Data, RB);
@@ -289,29 +287,6 @@ public class PlayerMovement : MonoBehaviour
 		Time.timeScale = 1;
 	}
 
-	// private void Run(float lerpAmount)
-	// {
-	// 	float targetSpeed = _moveInput.x * Data.runMaxSpeed;
-	// 	targetSpeed = Mathf.Lerp(RB.velocity.x, targetSpeed, lerpAmount);
-	// 	float accelRate;
-	// 	if (LastOnGroundTime > 0)
-	// 		accelRate = (Mathf.Abs(targetSpeed) > 0.01f) ? Data.runAccelAmount : Data.runDeccelAmount;
-	// 	else
-	// 		accelRate = (Mathf.Abs(targetSpeed) > 0.01f) ? Data.runAccelAmount * Data.accelInAir : Data.runDeccelAmount * Data.deccelInAir;
-	// 	if ((IsJumping || IsWallJumping || _isJumpFalling) && Mathf.Abs(RB.velocity.y) < Data.jumpHangTimeThreshold)
-	// 	{
-	// 		accelRate *= Data.jumpHangAccelerationMult;
-	// 		targetSpeed *= Data.jumpHangMaxSpeedMult;
-	// 	}
-	// 	if(Data.doConserveMomentum && Mathf.Abs(RB.velocity.x) > Mathf.Abs(targetSpeed) && Mathf.Sign(RB.velocity.x) == Mathf.Sign(targetSpeed) && Mathf.Abs(targetSpeed) > 0.01f && LastOnGroundTime < 0)
-	// 	{
-	// 		accelRate = 0; 
-	// 	}
-	// 	float speedDif = targetSpeed - RB.velocity.x;
-	// 	float movement = speedDif * accelRate;
-	// 	RB.AddForce(movement * Vector2.right, ForceMode2D.Force);
-	// }
-
 	private void Turn()
 	{
 		if(IsFacingRight)
@@ -325,82 +300,10 @@ public class PlayerMovement : MonoBehaviour
 		{
 			Vector3 rotator = new Vector3(transform.rotation.x, 0f, transform.rotation.z);
 			transform.rotation = Quaternion.Euler(rotator);
-			IsFacingRight = !IsFacingRight;		
+			IsFacingRight = !IsFacingRight;
 			_cameraFollowObject.CallTurn();
 		}
 	}
-
-	// private void Jump()
-	// {
-	// 	LastPressedJumpTime = 0;
-	// 	LastOnGroundTime = 0;
-	// 	float force = Data.jumpForce;
-	// 	if (RB.velocity.y < 0)
-	// 		force -= RB.velocity.y;
-	// 	RB.AddForce(Vector2.up * force, ForceMode2D.Impulse);
-	// 	CurrentAnimState = PlayerAnimState.Jump;
-	// }
-
-	// private void WallJump(int dir)
-	// {
-	// 	LastPressedJumpTime = 0;
-	// 	LastOnGroundTime = 0;
-	// 	LastOnWallRightTime = 0;
-	// 	LastOnWallLeftTime = 0;
-	// 	Vector2 force = new Vector2(Data.wallJumpForce.x, Data.wallJumpForce.y);
-	// 	force.x *= dir;
-	// 	if (Mathf.Sign(RB.velocity.x) != Mathf.Sign(force.x))
-	// 		force.x -= RB.velocity.x;
-	// 	if (RB.velocity.y < 0)
-	// 		force.y -= RB.velocity.y;
-	// 	RB.AddForce(force, ForceMode2D.Impulse);
-	// 	CurrentAnimState = PlayerAnimState.Jump;
-	// }
-
-	// private IEnumerator StartDash(Vector2 dir)
-	// {
-	// 	LastOnGroundTime = 0;
-	// 	LastPressedDashTime = 0;
-	// 	float startTime = Time.time;
-	// 	_dashesLeft--;
-	// 	_isDashAttacking = true;
-	// 	SetGravityScale(0);
-	// 	while (Time.time - startTime <= Data.dashAttackTime)
-	// 	{
-	// 		RB.velocity = dir.normalized * Data.dashSpeed;
-	// 		yield return null;
-	// 	}
-	// 	startTime = Time.time;
-	// 	_isDashAttacking = false;
-	// 	SetGravityScale(Data.gravityScale);
-	// 	RB.velocity = Data.dashEndSpeed * dir.normalized;
-	// 	while (Time.time - startTime <= Data.dashEndTime)
-	// 	{
-	// 		yield return null;
-	// 	}
-	// 	IsDashing = false;
-	// }
-
-	// private IEnumerator RefillDash(int amount)
-	// {
-	// 	_dashRefilling = true;
-	// 	yield return new WaitForSeconds(Data.dashRefillTime);
-	// 	_dashRefilling = false;
-	// 	_dashesLeft = Mathf.Min(Data.dashAmount, _dashesLeft + 1);
-	// }
-
-	// private void Slide()
-	// {
-	// 	if(RB.velocity.y > 0)
-	// 	{
-	// 	    RB.AddForce(-RB.velocity.y * Vector2.up, ForceMode2D.Impulse);
-	// 	}
-	// 	float speedDif = Data.slideSpeed - RB.velocity.y;
-	// 	float movement = speedDif * Data.slideAccel;
-	// 	movement = Mathf.Clamp(movement, -Mathf.Abs(speedDif)  * (1 / Time.fixedDeltaTime), Mathf.Abs(speedDif) * (1 / Time.fixedDeltaTime));
-	// 	RB.AddForce(movement * Vector2.up);
-	// 	CurrentAnimState = PlayerAnimState.WallSlide;
-	// }
 
 	public void TurnCheck()
 	{
@@ -450,23 +353,6 @@ public class PlayerMovement : MonoBehaviour
 			return true;
 		else
 			return false;
-	}
-
-	public void InterpolationCamera()
-	{
-		if(RB.velocity.y < _fallSpeedYDampingChangeThreshold && !CameraManager.instance.IsLerpingYDamping
-		&& !CameraManager.instance.LerpedFromPlayerFalling)
-		{
-			CameraManager.instance.LerpYDamping(true);
-		}
-
-		if(RB.velocity.y >= 0f && !CameraManager.instance.IsLerpingYDamping
-		&& CameraManager.instance.LerpedFromPlayerFalling)
-		{
-			CameraManager.instance.LerpedFromPlayerFalling = false;
-
-			CameraManager.instance.LerpYDamping(false);
-		}
 	}
 
 	private void OnDrawGizmosSelected()
