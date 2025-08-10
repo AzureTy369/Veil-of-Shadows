@@ -8,6 +8,7 @@ public class PlayerMovement : MonoBehaviour
 	#region COMPONENTS
     public Rigidbody2D RB { get; private set; }
 	public event System.Action<PlayerAnimState> OnAnimStateChanged;
+	public event System.Action OnLanded;
 	private PlayerAnimState _currentAnimState;
 	public PlayerAnimState CurrentAnimState
 	{
@@ -41,6 +42,7 @@ public class PlayerMovement : MonoBehaviour
 	public bool _dashRefilling { get; set; }
 	public Vector2 _lastDashDir { get; set; }
 	public bool _isDashAttacking { get; set; }
+	private bool _wasGrounded;
 	#endregion
 
 	#region INPUT PARAMETERS
@@ -50,19 +52,9 @@ public class PlayerMovement : MonoBehaviour
 	#endregion
 
 	#region CHECK PARAMETERS
-	[Header("Checks")]
-	[SerializeField] private Transform _groundCheckPoint;
-	[SerializeField] private Vector2 _groundCheckSize = new Vector2(0.49f, 0.03f);
-	[Space(5)]
-	[SerializeField] private Transform _frontWallCheckPoint;
-	[SerializeField] private Transform _backWallCheckPoint;
-	[SerializeField] private Vector2 _wallCheckSize = new Vector2(0.5f, 1f);
+	[Header("Sensors")]
+	[SerializeField] private PlayerSensors _sensors;
     #endregion
-
-    #region LAYERS & TAGS
-    [Header("Layers & Tags")]
-	[SerializeField] private LayerMask _groundLayer;
-	#endregion
 
 	[Header("Camera")]
 	[SerializeField] private GameObject _cameraFollowGO;
@@ -79,6 +71,7 @@ public class PlayerMovement : MonoBehaviour
     private void Awake()
 	{
 		RB = GetComponent<Rigidbody2D>();
+		if (_sensors == null) _sensors = GetComponent<PlayerSensors>();
 	}
 
 	void Start()
@@ -139,16 +132,20 @@ public class PlayerMovement : MonoBehaviour
 		LastPressedJumpTime -= Time.deltaTime;
 		LastPressedDashTime -= Time.deltaTime;
 
-		// Collision
+		// Sensors refresh
+		if (_sensors != null)
+			_sensors.Refresh();
+
+		// Collision state from sensors
 		if (!IsDashing && !IsJumping)
 		{
-			if (Physics2D.OverlapBox(_groundCheckPoint.position, _groundCheckSize, 0, _groundLayer))
+			if (_sensors != null && _sensors.IsGrounded)
 				LastOnGroundTime = Data.coyoteTime;
-			if (((Physics2D.OverlapBox(_frontWallCheckPoint.position, _wallCheckSize, 0, _groundLayer) && IsFacingRight)
-					|| (Physics2D.OverlapBox(_backWallCheckPoint.position, _wallCheckSize, 0, _groundLayer) && !IsFacingRight)) && !IsWallJumping)
+			bool frontWall = _sensors != null && _sensors.IsFrontWall;
+			bool backWall = _sensors != null && _sensors.IsBackWall;
+			if (((frontWall && IsFacingRight) || (backWall && !IsFacingRight)) && !IsWallJumping)
 				LastOnWallRightTime = Data.coyoteTime;
-			if (((Physics2D.OverlapBox(_frontWallCheckPoint.position, _wallCheckSize, 0, _groundLayer) && !IsFacingRight)
-				|| (Physics2D.OverlapBox(_backWallCheckPoint.position, _wallCheckSize, 0, _groundLayer) && IsFacingRight)) && !IsWallJumping)
+			if (((frontWall && !IsFacingRight) || (backWall && IsFacingRight)) && !IsWallJumping)
 				LastOnWallLeftTime = Data.coyoteTime;
 			LastOnWallTime = Mathf.Max(LastOnWallLeftTime, LastOnWallRightTime);
 		}
@@ -167,7 +164,6 @@ public class PlayerMovement : MonoBehaviour
 		{
 			_isJumpCut = false;
 			_isJumpFalling = false;
-			CameraManager.instance.ResetYDamping(); // Đảm bảo Damping luôn trả về mặc định khi chạm đất
 		}
 		if (!IsDashing)
 		{
@@ -268,6 +264,13 @@ public class PlayerMovement : MonoBehaviour
 		{
 			CurrentAnimState = PlayerAnimState.Fall;
 		}
+
+		bool isGroundedNow = LastOnGroundTime > 0 && !IsJumping && !IsWallJumping;
+		if (isGroundedNow && !_wasGrounded)
+		{
+			OnLanded?.Invoke();
+		}
+		_wasGrounded = isGroundedNow;
 	}
 
 	public void SetGravityScale(float scale)
@@ -353,14 +356,5 @@ public class PlayerMovement : MonoBehaviour
 			return true;
 		else
 			return false;
-	}
-
-	private void OnDrawGizmosSelected()
-	{
-		Gizmos.color = Color.green;
-		Gizmos.DrawWireCube(_groundCheckPoint.position, _groundCheckSize);
-		Gizmos.color = Color.blue;
-		Gizmos.DrawWireCube(_frontWallCheckPoint.position, _wallCheckSize);
-		Gizmos.DrawWireCube(_backWallCheckPoint.position, _wallCheckSize);
 	}
 }

@@ -12,6 +12,20 @@ public class PlayerCamera : MonoBehaviour
         movement = GetComponent<PlayerMovement>();
     }
 
+    private void OnEnable()
+    {
+        if (movement == null)
+            movement = GetComponent<PlayerMovement>();
+        if (movement != null)
+            movement.OnLanded += HandleLanded;
+    }
+
+    private void OnDisable()
+    {
+        if (movement != null)
+            movement.OnLanded -= HandleLanded;
+    }
+
     private void Start()
     {
         fallSpeedYDampingChangeThreshold = CameraManager.instance._fallSpeedYDampingChangeThreshold;
@@ -34,5 +48,10 @@ public class PlayerCamera : MonoBehaviour
             CameraManager.instance.LerpedFromPlayerFalling = false;
             CameraManager.instance.LerpYDamping(false);
         }
+    }
+
+    private void HandleLanded()
+    {
+        CameraManager.instance.ResetYDamping();
     }
 } 
