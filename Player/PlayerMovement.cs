@@ -73,6 +73,7 @@ public class PlayerMovement : MonoBehaviour
 	#endregion
 
 	private IPhysicsBody2D _body;
+    private IGravityService _gravityService;
 
     private void Awake()
 	{
@@ -90,6 +91,7 @@ public class PlayerMovement : MonoBehaviour
 		_wallJumpAction = new WallJumpAction(this, Data, _body);
 		_wallSlideAction = new WallSlideAction(this, Data, _body);
 		_dashAction = new DashAction(this, Data, _body);
+        _gravityService = new DefaultGravityService();
 	}
 
 	public void SetData(PlayerData data)
@@ -219,40 +221,7 @@ public class PlayerMovement : MonoBehaviour
 			IsSliding = false;
 
 		// Gravity
-		if (!_isDashAttacking)
-		{
-			if (IsSliding)
-			{
-				SetGravityScale(0);
-			}
-			else if (RB.velocity.y < 0 && _moveInput.y < 0)
-			{
-				SetGravityScale(Data.gravityScale * Data.fastFallGravityMult);
-				RB.velocity = new Vector2(RB.velocity.x, Mathf.Max(RB.velocity.y, -Data.maxFastFallSpeed));
-			}
-			else if (_isJumpCut)
-			{
-				SetGravityScale(Data.gravityScale * Data.jumpCutGravityMult);
-				RB.velocity = new Vector2(RB.velocity.x, Mathf.Max(RB.velocity.y, -Data.maxFallSpeed));
-			}
-			else if ((IsJumping || IsWallJumping || _isJumpFalling) && Mathf.Abs(RB.velocity.y) < Data.jumpHangTimeThreshold)
-			{
-				SetGravityScale(Data.gravityScale * Data.jumpHangGravityMult);
-			}
-			else if (RB.velocity.y < 0)
-			{
-				SetGravityScale(Data.gravityScale * Data.fallGravityMult);
-				RB.velocity = new Vector2(RB.velocity.x, Mathf.Max(RB.velocity.y, -Data.maxFallSpeed));
-			}
-			else
-			{
-				SetGravityScale(Data.gravityScale);
-			}
-		}
-		else
-		{
-			SetGravityScale(0);
-		}
+		_gravityService.Apply(Data, _body, _moveInput, IsSliding, _isDashAttacking, _isJumpCut, IsJumping, IsWallJumping, _isJumpFalling);
 
 		// Movement
 		if (!IsDashing)
