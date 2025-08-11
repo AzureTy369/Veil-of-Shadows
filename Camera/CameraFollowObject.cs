@@ -27,6 +27,11 @@ public class CameraFollowObject : MonoBehaviour
     }
 
     public void CallTurn(){
+        if (_turnCoroutine != null)
+        {
+            StopCoroutine(_turnCoroutine);
+            _turnCoroutine = null;
+        }
         _turnCoroutine = StartCoroutine(FlipYLerp());
     }
 

@@ -5,13 +5,13 @@ public class DashAction
 {
     private PlayerMovement _player;
     private PlayerData _playerData;
-    private Rigidbody2D _rb;
+    private IPhysicsBody2D _body;
 
-    public DashAction(PlayerMovement player, PlayerData playerData, Rigidbody2D rb)
+    public DashAction(PlayerMovement player, PlayerData playerData, IPhysicsBody2D body)
     {
         _player = player;
         _playerData = playerData;
-        _rb = rb;
+        _body = body;
     }
 
     public void UpdateDashAction()
@@ -29,13 +29,13 @@ public class DashAction
 		_player.SetGravityScale(0);
 		while (Time.time - startTime <= _playerData.dashAttackTime)
 		{
-			_rb.velocity = dir.normalized * _playerData.dashSpeed;
+			_body.Velocity = dir.normalized * _playerData.dashSpeed;
 			yield return null;
 		}
 		startTime = Time.time;
 		_player._isDashAttacking = false;
 		_player.SetGravityScale(_playerData.gravityScale);
-		_rb.velocity = _playerData.dashEndSpeed * dir.normalized;
+		_body.Velocity = _playerData.dashEndSpeed * dir.normalized;
 		while (Time.time - startTime <= _playerData.dashEndTime)
 		{
 			yield return null;

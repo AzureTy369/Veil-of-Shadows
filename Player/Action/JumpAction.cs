@@ -4,13 +4,13 @@ public class JumpAction
 {
     private PlayerMovement _player;
     private PlayerData _playerData;
-    private Rigidbody2D _rb;
+    private IPhysicsBody2D _body;
 
-    public JumpAction(PlayerMovement player, PlayerData playerData, Rigidbody2D rb)
+    public JumpAction(PlayerMovement player, PlayerData playerData, IPhysicsBody2D body)
     {
         _player = player;
         _playerData = playerData;
-        _rb = rb;
+        _body = body;
     }
 
     public void UpdateJumpAction()
@@ -18,9 +18,9 @@ public class JumpAction
         _player.LastPressedJumpTime = 0;
         _player.LastOnGroundTime = 0;
         float force = _playerData.jumpForce;
-        if (_rb.velocity.y < 0)
-            force -= _rb.velocity.y;
-        _rb.AddForce(Vector2.up * force, ForceMode2D.Impulse);
+        if (_body.Velocity.y < 0)
+            force -= _body.Velocity.y;
+        _body.AddForce(Vector2.up * force, ForceMode2D.Impulse);
         _player.CurrentAnimState = PlayerAnimState.Jump;
     }
 }

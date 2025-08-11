@@ -9,6 +9,10 @@ public class PlayerMovement : MonoBehaviour
     public Rigidbody2D RB { get; private set; }
 	public event System.Action<PlayerAnimState> OnAnimStateChanged;
 	public event System.Action OnLanded;
+	public event System.Action OnJumped;
+	public event System.Action OnDashedStart;
+	public event System.Action OnDashedEnd;
+	public event System.Action<bool> OnFacingChanged; // bool: IsFacingRight
 	private PlayerAnimState _currentAnimState;
 	public PlayerAnimState CurrentAnimState
 	{
@@ -68,9 +72,12 @@ public class PlayerMovement : MonoBehaviour
 	private DashAction _dashAction;
 	#endregion
 
+	private IPhysicsBody2D _body;
+
     private void Awake()
 	{
 		RB = GetComponent<Rigidbody2D>();
+		_body = new Rigidbody2DAdapter(RB);
 		if (_sensors == null) _sensors = GetComponent<PlayerSensors>();
 	}
 
@@ -78,11 +85,11 @@ public class PlayerMovement : MonoBehaviour
 	{
 		IsFacingRight = true;
 		_cameraFollowObject = _cameraFollowGO.GetComponent<CameraFollowObject>();
-		_runAction = new RunAction(this, Data, RB);
-		_jumpAction = new JumpAction(this, Data, RB);
-		_wallJumpAction = new WallJumpAction(this, Data, RB);
-		_wallSlideAction = new WallSlideAction(this, Data, RB);
-		_dashAction = new DashAction(this, Data, RB);
+		_runAction = new RunAction(this, Data, _body);
+		_jumpAction = new JumpAction(this, Data, _body);
+		_wallJumpAction = new WallJumpAction(this, Data, _body);
+		_wallSlideAction = new WallSlideAction(this, Data, _body);
+		_dashAction = new DashAction(this, Data, _body);
 	}
 
 	public void SetData(PlayerData data)
@@ -174,6 +181,7 @@ public class PlayerMovement : MonoBehaviour
 				_isJumpCut = false;
 				_isJumpFalling = false;
 				_jumpAction.UpdateJumpAction();
+				OnJumped?.Invoke();
 			}
 			else if (CanWallJump() && LastPressedJumpTime > 0)
 			{
@@ -184,6 +192,7 @@ public class PlayerMovement : MonoBehaviour
 				_wallJumpStartTime = Time.time;
 				_lastWallJumpDir = (LastOnWallRightTime > 0) ? -1 : 1;
 				_wallJumpAction.UpdateWallJumpAction(_lastWallJumpDir);
+				OnJumped?.Invoke();
 			}
 		}
 
@@ -199,6 +208,7 @@ public class PlayerMovement : MonoBehaviour
 			IsJumping = false;
 			IsWallJumping = false;
 			_isJumpCut = false;
+			OnDashedStart?.Invoke();
 			_dashAction.UpdateDashAction();
 		}
 
@@ -269,6 +279,7 @@ public class PlayerMovement : MonoBehaviour
 		if (isGroundedNow && !_wasGrounded)
 		{
 			OnLanded?.Invoke();
+			OnDashedEnd?.Invoke(); // kết thúc các effect dash còn tồn tại nếu có
 		}
 		_wasGrounded = isGroundedNow;
 	}
@@ -298,6 +309,7 @@ public class PlayerMovement : MonoBehaviour
 			transform.rotation = Quaternion.Euler(rotator);
 			IsFacingRight = !IsFacingRight;
 			_cameraFollowObject.CallTurn();
+			OnFacingChanged?.Invoke(IsFacingRight);
 		}
 		else
 		{
@@ -305,6 +317,7 @@ public class PlayerMovement : MonoBehaviour
 			transform.rotation = Quaternion.Euler(rotator);
 			IsFacingRight = !IsFacingRight;
 			_cameraFollowObject.CallTurn();
+			OnFacingChanged?.Invoke(IsFacingRight);
 		}
 	}
 

@@ -59,6 +59,10 @@ public class CameraManager : MonoBehaviour
             StopCoroutine(_lerpYPanCoroutine);
             _lerpYPanCoroutine = null;
         }
+        if (isPlayerFalling)
+        {
+            LerpedFromPlayerFalling = true;
+        }
         _lerpYPanCoroutine = StartCoroutine(LerpYAction(isPlayerFalling));
     }
 
@@ -101,6 +105,11 @@ public class CameraManager : MonoBehaviour
     public void PanCameraOnContact(float panDistance, float panTime, PanDirection panDirection,
     bool panToStartingPos)
     {
+        if (_panCameraCoroutine != null)
+        {
+            StopCoroutine(_panCameraCoroutine);
+            _panCameraCoroutine = null;
+        }
         _panCameraCoroutine = StartCoroutine(PanCamera(panDistance, panTime, panDirection, panToStartingPos));
     }
     private IEnumerator PanCamera(float panDistance, float panTime, PanDirection panDirection,
