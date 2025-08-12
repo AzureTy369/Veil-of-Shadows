@@ -11,6 +11,18 @@ public class CameraControlTrigger : MonoBehaviour
 
     private Collider2D _coll;
 
+    [SerializeField] private CameraManager cameraManager; // assign in inspector or auto-find
+    private ICameraService _cameraService;
+
+    void Awake()
+    {
+        if (cameraManager == null)
+        {
+            cameraManager = FindObjectOfType<CameraManager>();
+        }
+        _cameraService = cameraManager;
+    }
+
     void Start()
     {
         _coll = GetComponent<Collider2D>();
@@ -22,7 +34,7 @@ public class CameraControlTrigger : MonoBehaviour
         {
             if(customInspectorObjects.panCameraOnContact)
             {
-                CameraManager.instance.PanCameraOnContact(customInspectorObjects.panDistance,
+                _cameraService.PanCameraOnContact(customInspectorObjects.panDistance,
                 customInspectorObjects.panTime, customInspectorObjects.panDirection, false);
 
             }
@@ -38,13 +50,13 @@ public class CameraControlTrigger : MonoBehaviour
             if(customInspectorObjects.swapCameras && customInspectorObjects.cameraOnLeft != null &&
             customInspectorObjects.cameraOnRight != null)
             {
-                CameraManager.instance.SwapCamera(customInspectorObjects.cameraOnLeft,
+                _cameraService.SwapCamera(customInspectorObjects.cameraOnLeft,
                 customInspectorObjects.cameraOnRight, exitDirection);
             }
 
             if(customInspectorObjects.panCameraOnContact)
             {
-                CameraManager.instance.PanCameraOnContact(customInspectorObjects.panDistance,
+                _cameraService.PanCameraOnContact(customInspectorObjects.panDistance,
                 customInspectorObjects.panTime, customInspectorObjects.panDirection, true);
             }
         }

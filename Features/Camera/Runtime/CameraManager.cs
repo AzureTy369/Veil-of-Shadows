@@ -2,20 +2,20 @@ using UnityEngine;
 using System.Collections;
 using Unity.Cinemachine;
 
-public class CameraManager : MonoBehaviour
+public class CameraManager : MonoBehaviour, ICameraService
 {
-    private static CameraManager _instance;
-    public static CameraManager instance => _instance;
-
+    // Removed static singleton in favor of instance-based dependency
+    
     [SerializeField] private CinemachineCamera[] _allVirtualCameras; 
 
     [Header("Controls for lerping the Y Damping during player jump/fall")]
     [SerializeField] private float _fallPanAmount = 0.25f;
     [SerializeField] private float _fallYPanTime = 0.35f;
-    public float _fallSpeedYDampingChangeThreshold = -15f;
+    [SerializeField] public float _fallSpeedYDampingChangeThreshold = -15f;
 
     public bool IsLerpingYDamping { get; private set; }
     public bool LerpedFromPlayerFalling { get; set; }
+    public float FallSpeedYDampingChangeThreshold => _fallSpeedYDampingChangeThreshold;
 
     private Coroutine _lerpYPanCoroutine;
     private Coroutine _panCameraCoroutine;
@@ -27,16 +27,7 @@ public class CameraManager : MonoBehaviour
     private Vector2 _startingDamping;
     void Awake()
     {
-        if (_instance == null)
-        {
-            _instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
-
+        // Pick the first enabled camera as current
         for(int i = 0; i < _allVirtualCameras.Length; i++)
         {
             if(_allVirtualCameras[i].enabled)
@@ -147,6 +138,8 @@ public class CameraManager : MonoBehaviour
             _positionComposer.TargetOffset = lerpOffset;
             yield return null;
         }
+        // Ensure final position
+        _positionComposer.TargetOffset = endOffset;
     }
 
     #endregion

@@ -60,10 +60,6 @@ public class PlayerMovement : MonoBehaviour
 	[SerializeField] private PlayerSensors _sensors;
     #endregion
 
-	[Header("Camera")]
-	[SerializeField] private GameObject _cameraFollowGO;
-	private CameraFollowObject _cameraFollowObject;
-
 	#region ACTIONS
 	private RunAction _runAction;
 	private JumpAction _jumpAction;
@@ -85,19 +81,32 @@ public class PlayerMovement : MonoBehaviour
 	void Start()
 	{
 		IsFacingRight = true;
-		_cameraFollowObject = _cameraFollowGO.GetComponent<CameraFollowObject>();
 		_runAction = new RunAction(this, Data, _body);
 		_jumpAction = new JumpAction(this, Data, _body);
 		_wallJumpAction = new WallJumpAction(this, Data, _body);
 		_wallSlideAction = new WallSlideAction(this, Data, _body);
 		_dashAction = new DashAction(this, Data, _body);
-        _gravityService = new DefaultGravityService();
+        if (_gravityService == null)
+        {
+            _gravityService = new DefaultGravityService();
+        }
+        _dashesLeft = Data != null ? Data.dashAmount : 0;
 	}
 
 	public void SetData(PlayerData data)
 	{
 		Data = data;
 	}
+
+    public void SetGravityService(IGravityService gravityService)
+    {
+        _gravityService = gravityService;
+    }
+
+    public void SetPhysicsBody(IPhysicsBody2D physicsBody)
+    {
+        _body = physicsBody;
+    }
 
 	public void Move(Vector2 input)
 	{
@@ -133,13 +142,14 @@ public class PlayerMovement : MonoBehaviour
 
 	public void OnFixedUpdate()
 	{
-		// Timers
-		LastOnGroundTime -= Time.deltaTime;
-		LastOnWallTime -= Time.deltaTime;
-		LastOnWallRightTime -= Time.deltaTime;
-		LastOnWallLeftTime -= Time.deltaTime;
-		LastPressedJumpTime -= Time.deltaTime;
-		LastPressedDashTime -= Time.deltaTime;
+		// Timers (use fixed delta for physics loop)
+		float dt = Time.fixedDeltaTime;
+		LastOnGroundTime -= dt;
+		LastOnWallTime -= dt;
+		LastOnWallRightTime -= dt;
+		LastOnWallLeftTime -= dt;
+		LastPressedJumpTime -= dt;
+		LastPressedDashTime -= dt;
 
 		// Sensors refresh
 		if (_sensors != null)
@@ -277,7 +287,6 @@ public class PlayerMovement : MonoBehaviour
 			Vector3 rotator = new Vector3(transform.rotation.x, 180f, transform.rotation.z);
 			transform.rotation = Quaternion.Euler(rotator);
 			IsFacingRight = !IsFacingRight;
-			_cameraFollowObject.CallTurn();
 			OnFacingChanged?.Invoke(IsFacingRight);
 		}
 		else
@@ -285,7 +294,6 @@ public class PlayerMovement : MonoBehaviour
 			Vector3 rotator = new Vector3(transform.rotation.x, 0f, transform.rotation.z);
 			transform.rotation = Quaternion.Euler(rotator);
 			IsFacingRight = !IsFacingRight;
-			_cameraFollowObject.CallTurn();
 			OnFacingChanged?.Invoke(IsFacingRight);
 		}
 	}

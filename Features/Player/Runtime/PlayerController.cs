@@ -8,28 +8,35 @@ public class PlayerController : MonoBehaviour
 
     private Vector2 moveInput;
 
+    [Header("Input")]
+    [SerializeField] private bool useDefaultInput = true;
+    private IInputService inputService;
+
     private void Awake()
     {
         movement = GetComponent<PlayerMovement>();
         movement.SetData(playerData);
+        if (useDefaultInput || inputService == null)
+        {
+            inputService = new DefaultInputService();
+        }
     }
 
     private void Update()
     {
         // Nhận input
-        moveInput.x = Input.GetAxisRaw("Horizontal");
-        moveInput.y = Input.GetAxisRaw("Vertical");
+        moveInput = inputService.GetMoveInput();
         movement.Move(moveInput);
 
-        if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.C) || Input.GetKeyDown(KeyCode.J))
+        if (inputService.GetJumpDown())
         {
             movement.JumpInput();
         }
-        if (Input.GetKeyUp(KeyCode.Space) || Input.GetKeyUp(KeyCode.C) || Input.GetKeyUp(KeyCode.J))
+        if (inputService.GetJumpUp())
         {
             movement.JumpUpInput();
         }
-        if (Input.GetKeyDown(KeyCode.X) || Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.K))
+        if (inputService.GetDashDown())
         {
             movement.DashInput();
         }
