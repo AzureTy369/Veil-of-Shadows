@@ -2,9 +2,20 @@ using UnityEngine;
 using System.Collections;
 using Unity.Cinemachine;
 
-public class CameraManager : MonoBehaviour, ICameraService
+public class CameraManager : MonoBehaviour
 {
-    // Removed static singleton in favor of instance-based dependency
+    private static CameraManager _instance;
+    public static CameraManager instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = FindObjectOfType<CameraManager>();
+            }
+            return _instance;
+        }
+    }
     
     [SerializeField] private CinemachineCamera[] _allVirtualCameras; 
 
@@ -27,7 +38,14 @@ public class CameraManager : MonoBehaviour, ICameraService
     private Vector2 _startingDamping;
     void Awake()
     {
-        // Pick the first enabled camera as current
+        if (_instance != null && _instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        _instance = this;
+        DontDestroyOnLoad(gameObject);
+
         for(int i = 0; i < _allVirtualCameras.Length; i++)
         {
             if(_allVirtualCameras[i].enabled)
@@ -44,7 +62,6 @@ public class CameraManager : MonoBehaviour, ICameraService
 
     public void LerpYDamping(bool isPlayerFalling)
     {
-        // Dừng coroutine cũ nếu đang chạy
         if (_lerpYPanCoroutine != null)
         {
             StopCoroutine(_lerpYPanCoroutine);
@@ -138,7 +155,6 @@ public class CameraManager : MonoBehaviour, ICameraService
             _positionComposer.TargetOffset = lerpOffset;
             yield return null;
         }
-        // Ensure final position
         _positionComposer.TargetOffset = endOffset;
     }
 

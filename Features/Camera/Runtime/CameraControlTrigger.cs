@@ -11,16 +11,8 @@ public class CameraControlTrigger : MonoBehaviour
 
     private Collider2D _coll;
 
-    [SerializeField] private CameraManager cameraManager; // assign in inspector or auto-find
-    private ICameraService _cameraService;
-
     void Awake()
     {
-        if (cameraManager == null)
-        {
-            cameraManager = FindObjectOfType<CameraManager>();
-        }
-        _cameraService = cameraManager;
     }
 
     void Start()
@@ -32,9 +24,9 @@ public class CameraControlTrigger : MonoBehaviour
     {
         if(other.CompareTag("Player"))
         {
-            if(customInspectorObjects.panCameraOnContact)
+            if(customInspectorObjects.panCameraOnContact && CameraManager.instance != null)
             {
-                _cameraService.PanCameraOnContact(customInspectorObjects.panDistance,
+                CameraManager.instance.PanCameraOnContact(customInspectorObjects.panDistance,
                 customInspectorObjects.panTime, customInspectorObjects.panDirection, false);
 
             }
@@ -48,15 +40,15 @@ public class CameraControlTrigger : MonoBehaviour
             Vector2 exitDirection = (other.transform.position - _coll.bounds.center).normalized;
 
             if(customInspectorObjects.swapCameras && customInspectorObjects.cameraOnLeft != null &&
-            customInspectorObjects.cameraOnRight != null)
+            customInspectorObjects.cameraOnRight != null && CameraManager.instance != null)
             {
-                _cameraService.SwapCamera(customInspectorObjects.cameraOnLeft,
+                CameraManager.instance.SwapCamera(customInspectorObjects.cameraOnLeft,
                 customInspectorObjects.cameraOnRight, exitDirection);
             }
 
-            if(customInspectorObjects.panCameraOnContact)
+            if(customInspectorObjects.panCameraOnContact && CameraManager.instance != null)
             {
-                _cameraService.PanCameraOnContact(customInspectorObjects.panDistance,
+                CameraManager.instance.PanCameraOnContact(customInspectorObjects.panDistance,
                 customInspectorObjects.panTime, customInspectorObjects.panDirection, true);
             }
         }
