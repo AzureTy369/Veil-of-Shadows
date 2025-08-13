@@ -7,9 +7,17 @@ public class PlayerCamera : MonoBehaviour
     private Rigidbody2D rb;
     private float fallSpeedYDampingChangeThreshold;
 
+    [SerializeField] private CameraManager cameraManager; // assign in inspector or auto-find
+    private ICameraService cameraService;
+
     private void Awake()
     {
         movement = GetComponent<PlayerMovement>();
+        if (cameraManager == null)
+        {
+            cameraManager = FindObjectOfType<CameraManager>();
+        }
+        cameraService = cameraManager;
     }
 
     private void OnEnable()
@@ -28,7 +36,7 @@ public class PlayerCamera : MonoBehaviour
 
     private void Start()
     {
-        fallSpeedYDampingChangeThreshold = CameraManager.instance._fallSpeedYDampingChangeThreshold;
+        fallSpeedYDampingChangeThreshold = cameraService.FallSpeedYDampingChangeThreshold;
         rb = movement.RB;
     }
 
@@ -36,22 +44,22 @@ public class PlayerCamera : MonoBehaviour
     {
         if (rb == null) return;
         
-        if (rb.velocity.y < fallSpeedYDampingChangeThreshold && !CameraManager.instance.IsLerpingYDamping
-            && !CameraManager.instance.LerpedFromPlayerFalling)
+        if (rb.velocity.y < fallSpeedYDampingChangeThreshold && !cameraService.IsLerpingYDamping
+            && !cameraService.LerpedFromPlayerFalling)
         {
-            CameraManager.instance.LerpYDamping(true);
+            cameraService.LerpYDamping(true);
         }
 
-        if (rb.velocity.y >= 0f && !CameraManager.instance.IsLerpingYDamping
-            && CameraManager.instance.LerpedFromPlayerFalling)
+        if (rb.velocity.y >= 0f && !cameraService.IsLerpingYDamping
+            && cameraService.LerpedFromPlayerFalling)
         {
-            CameraManager.instance.LerpedFromPlayerFalling = false;
-            CameraManager.instance.LerpYDamping(false);
+            cameraService.LerpedFromPlayerFalling = false;
+            cameraService.LerpYDamping(false);
         }
     }
 
     private void HandleLanded()
     {
-        CameraManager.instance.ResetYDamping();
+        cameraService.ResetYDamping();
     }
 } 
