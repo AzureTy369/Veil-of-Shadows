@@ -4,7 +4,7 @@ using System;
 
 public class PlayerMovement : MonoBehaviour
 {
-    private PlayerData Data;
+    [SerializeField] private PlayerData Data;
 
     #region COMPONENTS
     public Rigidbody2D RB { get; private set; }
@@ -74,16 +74,14 @@ public class PlayerMovement : MonoBehaviour
         _cameraFollowObject = _cameraFollowGO.GetComponent<CameraFollowObject>();
         _fallSpeedYDampingChangeThreshold = CameraManager.instance._fallSpeedYDampingChangeThreshold;
         playerCamera.Initialize(RB, _fallSpeedYDampingChangeThreshold);
-    }
-
-    public void SetData(PlayerData data)
-    {
-        Data = data;
-        playerRun = new PlayerRun(this, RB, Data);
-        playerJump = new PlayerJump(this, RB, Data);
-        playerDash = new PlayerDash(this, RB, Data);
-        playerSlide = new PlayerSlide(this, RB, Data);
-        playerGravity = new PlayerGravity(this, RB, Data);
+        if (Data != null)
+        {
+            playerRun = new PlayerRun(this, RB, Data);
+            playerJump = new PlayerJump(this, RB, Data);
+            playerDash = new PlayerDash(this, RB, Data);
+            playerSlide = new PlayerSlide(this, RB, Data);
+            playerGravity = new PlayerGravity(this, RB, Data);
+        }
     }
 
     public void Move(Vector2 input)

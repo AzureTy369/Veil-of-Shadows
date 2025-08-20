@@ -3,7 +3,6 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerMovement))]
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField] private PlayerData playerData;
     private PlayerMovement movement;
 
     private Vector2 moveInput;
@@ -11,7 +10,6 @@ public class PlayerController : MonoBehaviour
     private void Awake()
     {
         movement = GetComponent<PlayerMovement>();
-        movement.SetData(playerData);
     }
 
     private void Update()
