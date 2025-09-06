@@ -49,6 +49,12 @@ public class PlayerAnimator : MonoBehaviour
             case PlayerAnimState.WallSlide:
                 animator.SetBool("IsWallSliding", true);
                 break;
+            case PlayerAnimState.Hit:
+                animator.SetTrigger("Hit");
+                break;
+            case PlayerAnimState.Die:
+                animator.SetTrigger("Die");
+                break;
         }
     }
 }

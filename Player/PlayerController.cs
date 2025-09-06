@@ -1,6 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(PlayerMovement))]
+[RequireComponent(typeof(PlayerHealth))]
 public class PlayerController : MonoBehaviour
 {
     private PlayerMovement movement;
@@ -14,6 +15,11 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        if (movement.PlayerHealth.KnockbackCounter > 0)
+        {
+            movement.PlayerHealth.KnockbackCounter -= Time.deltaTime;
+            return;
+        }
         // Nhận input
         moveInput.x = Input.GetAxisRaw("Horizontal");
         moveInput.y = Input.GetAxisRaw("Vertical");

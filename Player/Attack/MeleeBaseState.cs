@@ -47,7 +47,7 @@ public class MeleeBaseState : State
 
         if (Input.GetMouseButtonDown(0))
         {
-            AttackPressedTimer = 2;
+            AttackPressedTimer = 0.1f;
         }
 
         if (animator.GetFloat("AttackWindow.Open") > 0f && AttackPressedTimer > 0)
@@ -63,10 +63,12 @@ public class MeleeBaseState : State
 
     protected void Attack()
     {
+        PlayerHealth playerHealth = stateMachine.GetComponent<PlayerHealth>();
         List<Collider2D> collidersToDamage = new List<Collider2D>();
         ContactFilter2D filter = new ContactFilter2D();
         filter.useTriggers = true;
         int colliderCount = Physics2D.OverlapCollider(hitCollider, filter, collidersToDamage);
+
         for (int i = 0; i < colliderCount; i++)
         {
 
@@ -77,6 +79,12 @@ public class MeleeBaseState : State
                 // Only check colliders with a valid Team Componnent attached
                 if (hitTeamComponent && hitTeamComponent.teamIndex == TeamIndex.Enemy)
                 {
+                    // Gây damage lên Enemy nếu có IDamageable
+                    IDamageable damageable = collidersToDamage[i].GetComponentInParent<IDamageable>();
+                    if (damageable != null)
+                    {
+                        damageable.TakeDamage(attackIndex * 10); // Hoặc giá trị damage phù hợp
+                    }
                     // GameObject.Instantiate(HitEffectPrefab, collidersToDamage[i].transform);
                     Debug.Log("Enemy Has Taken:" + attackIndex + "Damage");
                     collidersDamaged.Add(collidersToDamage[i]);

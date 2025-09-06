@@ -4,6 +4,7 @@ public enum PlayerAnimState
     Run,
     Jump,
     Fall,
-    WallSlide
-    // Mở rộng: Attack, Hurt, Die, Combo...
+    WallSlide,
+    Hit,
+    Die
 } 

@@ -9,6 +9,7 @@ public class PlayerMovement : MonoBehaviour
     #region COMPONENTS
     public Rigidbody2D RB { get; private set; }
     public PlayerAnimState CurrentAnimState { get; private set; }
+    public PlayerHealth PlayerHealth { get; private set; }
     #endregion
 
     #region STATE PARAMETERS
@@ -66,6 +67,7 @@ public class PlayerMovement : MonoBehaviour
         RB = GetComponent<Rigidbody2D>();
         playerCollision = GetComponent<PlayerCollision>();
         playerCamera = GetComponent<PlayerCamera>();
+        PlayerHealth = GetComponent<PlayerHealth>();
     }
 
     private void Start()
@@ -84,8 +86,16 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    private bool inputEnabled = true;
+
+    public void SetInputEnabled(bool enabled)
+    {
+        inputEnabled = enabled;
+    }
+
     public void Move(Vector2 input)
     {
+        if (!inputEnabled) return;
         _moveInput = input;
         if (_moveInput.x > 0 || _moveInput.x < 0)
             TurnCheck();
@@ -117,6 +127,11 @@ public class PlayerMovement : MonoBehaviour
 
     public void OnFixedUpdate()
     {
+        if (PlayerHealth.KnockbackCounter > 0)
+        {
+            PlayerHealth.KnockbackCounter -= Time.deltaTime;
+            return;
+        }
         // Timers
         LastOnGroundTime -= Time.deltaTime;
         LastOnWallTime -= Time.deltaTime;
