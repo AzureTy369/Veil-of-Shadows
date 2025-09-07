@@ -86,16 +86,9 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    private bool inputEnabled = true;
-
-    public void SetInputEnabled(bool enabled)
-    {
-        inputEnabled = enabled;
-    }
-
     public void Move(Vector2 input)
     {
-        if (!inputEnabled) return;
+        if (PlayerHealth.KnockbackCounter > 0) return;
         _moveInput = input;
         if (_moveInput.x > 0 || _moveInput.x < 0)
             TurnCheck();

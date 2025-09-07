@@ -1,18 +1,19 @@
+// EnemyBase.cs
 using UnityEngine;
 using System.Collections;
-using System.Collections.Generic; // Added for List
+using System.Collections.Generic;
 
 [RequireComponent(typeof(EnemyStateMachine))]
 [RequireComponent(typeof(TeamComponent))]
-public class EnemyController : MonoBehaviour, IDamageable
-{   
+public abstract class EnemyBase : MonoBehaviour, IDamageable
+{
     [Header("Data")]
-    public EnemyData data;
-    
+    public EnemyData_SO data;
+
     [Header("Shaders")]
     private MaterialPropertyBlock _mpb;
     private static readonly int FlashAmount = Shader.PropertyToID("_FlashAmount");
-    
+
     [Header("Components")]
     public Animator animator;
     public Rigidbody2D rb;
@@ -23,17 +24,11 @@ public class EnemyController : MonoBehaviour, IDamageable
     [Header("Hitbox")]
     [SerializeField] public Collider2D hitboxCollider;
 
-    [Header("Patrol")]
-    public Transform[] patrolPoints;
-    [HideInInspector] public int patrolIndex = 0;
-    [HideInInspector] public float patrolWaitTimer = 0f;
-    [HideInInspector] public bool isWaitingAtPoint = false;
-
     [Header("Detection")]
     public LayerMask playerMask = 1;
     public LayerMask obstacleMask = 1;
-    
-    [Header("Runtime")] 
+
+    [Header("Runtime")]
     public float currentHealth;
     public bool isDead = false;
     public bool isFacingRight = true;
@@ -43,16 +38,14 @@ public class EnemyController : MonoBehaviour, IDamageable
     public System.Action OnDeath;
 
     // Cached references
-    private Transform playerTransform;
+    protected Transform playerTransform;
     private Collider2D enemyCollider;
     private SpriteRenderer spriteRenderer;
 
     // Timers
     [HideInInspector] public float lastAttackTime = 0f;
-
-    private void Awake()
+    protected virtual void Awake()
     {
-        Debug.Log($"[EnemyController] Awake: {name}");
         InitializeComponents();
         InitializeHealth();
         FindPlayer();
@@ -62,23 +55,21 @@ public class EnemyController : MonoBehaviour, IDamageable
         _mpb = new MaterialPropertyBlock();
     }
 
-    private void Start()
+    protected virtual void Start()
     {
-        Debug.Log($"[EnemyController] Start: {name}");
         ValidateSetup();
-        Debug.Log($"[EnemyController] ChangeState to Idle: {name}");
         stateMachine.ChangeState(EnemyStateType.Idle);
         rb.sleepMode = RigidbodySleepMode2D.NeverSleep;
     }
 
-    private void InitializeComponents()
+    protected virtual void InitializeComponents()
     {
         stateMachine = GetComponent<EnemyStateMachine>();
         if (!animator) animator = GetComponent<Animator>();
         if (!rb) rb = GetComponent<Rigidbody2D>();
         enemyCollider = GetComponent<Collider2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
-        
+
         // Setup rigidbody constraints
         if (rb)
         {
@@ -87,12 +78,12 @@ public class EnemyController : MonoBehaviour, IDamageable
         }
     }
 
-    private void InitializeHealth()
+    protected virtual void InitializeHealth()
     {
         currentHealth = data != null ? data.maxHealth : 100f;
     }
 
-    private void FindPlayer()
+    protected virtual void FindPlayer()
     {
         if (!playerTransform)
         {
@@ -101,16 +92,11 @@ public class EnemyController : MonoBehaviour, IDamageable
         }
     }
 
-    private void ValidateSetup()
+    protected virtual void ValidateSetup()
     {
         if (!data)
         {
-            Debug.LogError($"Enemy {name} missing EnemyData!");
-        }
-
-        if (patrolPoints.Length == 0)
-        {
-            Debug.LogWarning($"Enemy {name} has no patrol points!");
+            Debug.LogError($"Enemy {name} missing EnemyData_SO!");
         }
 
         if (!groundCheck)
@@ -124,13 +110,13 @@ public class EnemyController : MonoBehaviour, IDamageable
 
     #region Damage System
 
-    public void TakeDamage(float amount)
+    public virtual void TakeDamage(float amount)
     {
         if (isDead) return;
 
         currentHealth -= amount;
         currentHealth = Mathf.Max(0, currentHealth);
-        
+
         OnHealthChanged?.Invoke(currentHealth);
 
         // Flash trắng khi bị trúng đòn
@@ -154,7 +140,7 @@ public class EnemyController : MonoBehaviour, IDamageable
         }
     }
 
-    public void TakeDamage(float amount, Vector2 knockbackDirection, Vector2 knockbackForce, float knockbackDuration)
+    public virtual void TakeDamage(float amount, Vector2 knockbackDirection, Vector2 knockbackForce, float knockbackDuration)
     {
         // For now, just call the basic TakeDamage (ignoring knockback)
         TakeDamage(amount);
@@ -171,82 +157,62 @@ public class EnemyController : MonoBehaviour, IDamageable
         spriteRenderer.SetPropertyBlock(_mpb);
     }
 
-    public void Die()
+    public virtual void Die()
     {
         if (isDead) return;
-        Debug.Log($"[EnemyController] Die: {name}");
+        Debug.Log($"[EnemyBase] Die: {name}");
         isDead = true;
         OnDeath?.Invoke();
         stateMachine.ChangeState(EnemyStateType.Die);
     }
 
     #endregion
-    
+
     #region Movement & Detection
 
-    public bool IsGrounded()
+    public virtual bool IsGrounded()
     {
         if (!groundCheck) return true;
-        // Sử dụng OverlapCircle thay cho CheckCircle
+        // Sử dụng OverlapBox thay cho CheckCircle (fixed from original)
         return Physics2D.OverlapBox(groundCheck.position, new Vector2(0.6f, 0.3f), 0, groundMask);
     }
 
-    public bool CanSeePlayer()
+    public virtual bool CanSeePlayer()
     {
-        if (!playerTransform || !IsPlayerInDetectionRange()) return false;
+        if (!playerTransform) return false;
 
-        Vector2 direction = (playerTransform.position - transform.position).normalized;
-        float distance = Vector2.Distance(transform.position, playerTransform.position);
+        Vector2 direction = playerTransform.position - transform.position;
+        float distance = direction.magnitude;
 
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, distance, obstacleMask);
-        
-        return hit.collider == null; // No obstacles between enemy and player
+        if (distance > data.detectionRange) return false;
+
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, direction.normalized, distance, obstacleMask);
+        return hit.collider == null;
     }
 
-    public bool IsPlayerInDetectionRange()
+    public virtual bool IsPlayerInAttackRange()
     {
-        if (!playerTransform || !data) return false;
-        return Vector2.Distance(transform.position, playerTransform.position) <= data.detectionRange;
-    }
-
-    public bool IsPlayerInAttackRange()
-    {
-        if (!playerTransform || !data) return false;
+        if (!playerTransform) return false;
         return Vector2.Distance(transform.position, playerTransform.position) <= data.attackRange;
     }
 
-    public bool CanAttack()
+    public virtual bool CanAttack()
     {
-        return !isDead && Time.time >= lastAttackTime + data.attackCooldown;
+        return Time.time - lastAttackTime >= data.attackCooldown;
     }
 
-    public void PerformAttack()
+    public virtual void PerformAttack()
     {
-        if (!CanAttack()) return;
-
-        if (animator)
-        {
-            animator.SetTrigger("Attack");
-        }
+        lastAttackTime = Time.time;
+        animator.Play("Attack");
+        // Attack logic will be triggered via Animation Event
     }
 
-
-    public void MoveTowards(Vector2 targetPosition, float speedMultiplier = 1f)
+    public virtual void MoveTowards(Vector2 target, float speedMultiplier = 1f)
     {
-        if (isDead || !rb) return;
-
-        Vector2 direction = (targetPosition - (Vector2)transform.position).normalized;
-        
-        // Check for edges/cliffs before moving
-        if (ShouldAvoidEdge(direction))
-        {
-            return;
-        }
-
+        Vector2 direction = (target - (Vector2)transform.position).normalized;
         float moveSpeed = data.moveSpeed * speedMultiplier;
-        Debug.Log($"[MoveTowards] {name} | direction: {direction} | moveSpeed: {moveSpeed} | before velocity: {rb.velocity}");
         rb.velocity = new Vector2(direction.x * moveSpeed, rb.velocity.y);
-        Debug.Log($"[MoveTowards] {name} | after velocity: {rb.velocity}");
 
         // Face the movement direction
         if (Mathf.Abs(direction.x) > 0.1f)
@@ -255,7 +221,7 @@ public class EnemyController : MonoBehaviour, IDamageable
         }
     }
 
-    public void StopMovement()
+    public virtual void StopMovement()
     {
         if (rb)
         {
@@ -263,64 +229,24 @@ public class EnemyController : MonoBehaviour, IDamageable
         }
     }
 
-    public void FaceDirection(bool facingRight)
+    public virtual void FaceDirection(bool facingRight)
     {
         if (isFacingRight != facingRight)
         {
             isFacingRight = facingRight;
-            
+
             // Fallback to scale flip
             Vector3 scale = transform.localScale;
             scale.x = Mathf.Abs(scale.x) * (isFacingRight ? 1 : -1);
             transform.localScale = scale;
-            
         }
     }
 
     #endregion
 
-    #region Patrol System
-
-    public Vector2 GetPatrolTarget()
-    {
-        if (patrolPoints == null || patrolPoints.Length == 0)
-            return transform.position;
-
-        return patrolPoints[patrolIndex].position;
-    }
-
-    public void NextPatrolPoint()
-    {
-        if (patrolPoints.Length > 0)
-        {
-            patrolIndex = (patrolIndex + 1) % patrolPoints.Length;
-        }
-    }
-
-    public bool IsAtPatrolPoint()
-    {
-        if (patrolPoints == null || patrolPoints.Length == 0) return true;
-        
-        Vector2 target = patrolPoints[patrolIndex].position;
-        return Vector2.Distance(transform.position, target) < 0.2f;
-    }
-
-    #endregion
-
-    #region Private Methods
-
-    private bool ShouldAvoidEdge(Vector2 direction)
-    {
-        if (!IsGrounded()) return false;
-        Vector2 edgeCheckPos = (Vector2)transform.position + direction * 2.5f + Vector2.down * 1.5f;
-        // Sử dụng OverlapCircle thay cho CheckCircle
-        return !Physics2D.OverlapCircle(edgeCheckPos, 0.3f, groundMask);
-    }
-
-    #endregion
     #region Animation Events
     // Gọi từ Animation Event đúng frame tấn công
-    public void OnAttackHit()
+    public virtual void OnAttackHit()
     {
         if (hitboxCollider == null) return;
         List<Collider2D> results = new List<Collider2D>();
@@ -336,16 +262,17 @@ public class EnemyController : MonoBehaviour, IDamageable
                 if (playerHealth != null)
                 {
                     Vector2 direction = (playerHealth.transform.position - transform.position).normalized;
-                    Vector2 knockbackForce = new Vector2(data.kockbackForceX, data.kockbackForceY);
+                    Vector2 knockbackForce = new Vector2(data.knockbackForceX, data.knockbackForceY);
                     playerHealth.TakeDamage(data.attackDamage, direction, knockbackForce, data.knockbackDuration);
                 }
             }
         }
     }
     #endregion
+
     #region Gizmos
 
-    private void OnDrawGizmosSelected()
+    protected virtual void OnDrawGizmosSelected()
     {
         if (!data) return;
         // Detection Range
@@ -356,27 +283,9 @@ public class EnemyController : MonoBehaviour, IDamageable
         Gizmos.DrawWireSphere(transform.position, data.attackRange);
         // Ground Check
         Gizmos.color = Color.green;
-        Gizmos.DrawWireCube(groundCheck.position, new Vector2(0.6f, 0.3f));
-        // Patrol Points
-        if (patrolPoints != null && patrolPoints.Length > 0)
+        if (groundCheck != null)
         {
-            Gizmos.color = Color.blue;
-            for (int i = 0; i < patrolPoints.Length; i++)
-            {
-                if (patrolPoints[i] != null)
-                {
-                    Gizmos.DrawWireSphere(patrolPoints[i].position, 0.3f);
-                    // Draw lines between patrol points
-                    if (i < patrolPoints.Length - 1 && patrolPoints[i + 1] != null)
-                    {
-                        Gizmos.DrawLine(patrolPoints[i].position, patrolPoints[i + 1].position);
-                    }
-                    else if (i == patrolPoints.Length - 1 && patrolPoints[0] != null)
-                    {
-                        Gizmos.DrawLine(patrolPoints[i].position, patrolPoints[0].position);
-                    }
-                }
-            }
+            Gizmos.DrawWireCube(groundCheck.position, new Vector2(0.6f, 0.3f));
         }
         // Line of sight to player
         if (playerTransform && CanSeePlayer())
@@ -402,9 +311,5 @@ public class EnemyController : MonoBehaviour, IDamageable
 
     // Properties for easy access
     public Transform Player => playerTransform;
-    public EnemyData Data => data;
+    public EnemyData_SO Data => data;
 }
-
-
-
-

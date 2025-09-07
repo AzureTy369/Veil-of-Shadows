@@ -1,66 +1,38 @@
+// Cập nhật EnemyPatrolState.cs (để hỗ trợ cả ground và flying)
 using UnityEngine;
 
 public class EnemyPatrolState : EnemyState
 {
-    public override void OnEnter(EnemyController controller)
-    {
-        Debug.Log($"[EnemyPatrolState] OnEnter: {controller.name}");
-        controller.animator.Play("Walk");
-        controller.patrolWaitTimer = 0f;
-        controller.isWaitingAtPoint = false;
-    }
+    private PatrolBehavior patrolBehavior;
+    private FlyingBehavior flyingBehavior;
 
-    public override void OnUpdate(EnemyController controller)
+    public override void OnEnter(EnemyBase controller)
     {
-        Debug.Log($"[EnemyPatrolState] OnUpdate: {controller.name} | AtPatrolPoint: {controller.IsAtPatrolPoint()} | patrolIndex: {controller.patrolIndex}");
-        // Check for player first
-        if (controller.CanSeePlayer())
+        patrolBehavior = controller.GetComponent<PatrolBehavior>();
+        flyingBehavior = controller.GetComponent<FlyingBehavior>();
+
+        if (patrolBehavior == null && flyingBehavior == null)
         {
-            controller.stateMachine.ChangeState(EnemyStateType.Chase);
+            Debug.LogError($"[EnemyPatrolState] Missing Patrol or Flying Behavior on {controller.name}");
             return;
         }
 
-        // No patrol points - go idle
-        if (controller.patrolPoints == null || controller.patrolPoints.Length == 0)
+        controller.animator.Play(controller is FlyingEnemy ? "Fly" : "Walk");
+    }
+
+    public override void OnUpdate(EnemyBase controller)
+    {
+        if (patrolBehavior != null)
         {
-            controller.stateMachine.ChangeState(EnemyStateType.Idle);
-            return;
+            patrolBehavior.UpdatePatrol();
         }
-
-        // At patrol point
-        if (controller.IsAtPatrolPoint())
+        else if (flyingBehavior != null)
         {
-            if (!controller.isWaitingAtPoint)
-            {
-                controller.isWaitingAtPoint = true;
-                controller.StopMovement();
-                controller.animator.Play("Idle");
-            }
-
-            controller.patrolWaitTimer += Time.deltaTime;
-
-            if (controller.patrolWaitTimer >= controller.data.patrolWaitTime)
-            {
-                controller.animator.Play("Walk");
-                controller.NextPatrolPoint();
-                controller.patrolWaitTimer = 0f;
-                controller.isWaitingAtPoint = false;  
-                
-            }
-        }
-        else
-        {
-            // Luôn set isWaitingAtPoint = false khi chưa tới điểm
-            controller.isWaitingAtPoint = false;
-            // Move toward patrol point
-            Vector2 target = controller.GetPatrolTarget();
-            Debug.Log($"[EnemyPatrolState] Gọi MoveTowards tại patrolIndex: {controller.patrolIndex} | target: {target}");
-            controller.MoveTowards(target);
+            flyingBehavior.UpdateFly();
         }
     }
 
-    
-    public override void OnExit(EnemyController controller)
+    public override void OnExit(EnemyBase controller)
     {
         controller.StopMovement();
     }

@@ -1,54 +1,35 @@
+// EnemyAttackState.cs
 using UnityEngine;
 
 public class EnemyAttackState : EnemyState
 {
-    private bool hasAttacked;
+    private AttackBehavior attackBehavior;
 
-    public override void OnEnter(EnemyController controller)
+    public override void OnEnter(EnemyBase controller)
     {
-        hasAttacked = false;
+        attackBehavior = controller.GetComponent<AttackBehavior>();
+        if (attackBehavior == null)
+        {
+            Debug.LogError($"[EnemyAttackState] Missing AttackBehavior on {controller.name}");
+            return;
+        }
+
         controller.StopMovement();
         if (controller.CanAttack())
         {
             controller.PerformAttack();
-            hasAttacked = true;
         }
     }
 
-    public override void OnUpdate(EnemyController controller)
+    public override void OnUpdate(EnemyBase controller)
     {
-        if (!controller.Player)
+        if (attackBehavior != null)
         {
-            controller.stateMachine.ChangeState(EnemyStateType.Patrol);
-            return;
-        }
-
-        // Face the player
-        Vector2 directionToPlayer = controller.Player.position - controller.transform.position;
-        controller.FaceDirection(directionToPlayer.x > 0);
-
-        // If player moved out of attack range
-        if (!controller.IsPlayerInAttackRange())
-        {
-            if (controller.CanSeePlayer())
-            {
-                controller.stateMachine.ChangeState(EnemyStateType.Chase);
-            }
-            else
-            {
-                controller.stateMachine.ChangeState(EnemyStateType.Patrol);
-            }
-            return;
-        }
-
-        // Attack again if cooldown is ready
-        if (controller.CanAttack())
-        {
-            controller.PerformAttack();
+            attackBehavior.UpdateAttack();
         }
     }
 
-    public override void OnExit(EnemyController controller)
+    public override void OnExit(EnemyBase controller)
     {
         // Nothing needed
     }

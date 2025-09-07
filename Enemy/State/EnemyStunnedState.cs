@@ -1,3 +1,4 @@
+// EnemyStunnedState.cs
 using UnityEngine;
 
 public class EnemyStunnedState : EnemyState
@@ -5,21 +6,21 @@ public class EnemyStunnedState : EnemyState
     private float stunTimer;
     private float stunDuration;
 
-    public override void OnEnter(EnemyController controller)
+    public override void OnEnter(EnemyBase controller)
     {
         stunTimer = 0f;
         stunDuration = 0.3f; // Shorter stun for better game feel
-        
+
         controller.StopMovement();
-        
+
         // Hit animation is already triggered in TakeDamage method
         // No need to trigger it again here
     }
 
-    public override void OnUpdate(EnemyController controller)
+    public override void OnUpdate(EnemyBase controller)
     {
         stunTimer += Time.deltaTime;
-        
+
         if (stunTimer >= stunDuration)
         {
             // Return to appropriate state based on player proximity
@@ -40,7 +41,8 @@ public class EnemyStunnedState : EnemyState
             }
         }
     }
-    public override void OnExit(EnemyController controller)
+
+    public override void OnExit(EnemyBase controller)
     {
     }
 }

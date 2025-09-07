@@ -1,3 +1,4 @@
+// Cập nhật EnemyIdleState.cs (để hỗ trợ flying)
 using UnityEngine;
 
 public class EnemyIdleState : EnemyState
@@ -5,20 +6,17 @@ public class EnemyIdleState : EnemyState
     private float idleTimer;
     private float idleDuration;
 
-    public override void OnEnter(EnemyController controller)
+    public override void OnEnter(EnemyBase controller)
     {
-        Debug.Log($"[EnemyIdleState] OnEnter: {controller.name}");
         idleTimer = 0f;
         idleDuration = Random.Range(1f, 3f); // Random idle time
-        
+
         controller.StopMovement();
         controller.animator.Play("Idle");
-        Debug.Log("Idle Start");
     }
 
-    public override void OnUpdate(EnemyController controller)
+    public override void OnUpdate(EnemyBase controller)
     {
-        Debug.Log($"[EnemyIdleState] OnUpdate: {controller.name} | idleTimer: {idleTimer:F2}/{idleDuration:F2}");
         idleTimer += Time.deltaTime;
 
         // Check for player
@@ -28,19 +26,27 @@ public class EnemyIdleState : EnemyState
             return;
         }
 
-        // Transition to patrol after idle time
         if (idleTimer >= idleDuration)
         {
-            if (controller.patrolPoints != null && controller.patrolPoints.Length > 0)
+            bool hasPatrol = false;
+            if (controller is GroundEnemy groundEnemy && groundEnemy.patrolPoints != null && groundEnemy.patrolPoints.Length > 0)
+            {
+                hasPatrol = true;
+            }
+            else if (controller is FlyingEnemy flyEnemy && flyEnemy.flyPoints != null && flyEnemy.flyPoints.Length > 0)
+            {
+                hasPatrol = true;
+            }
+
+            if (hasPatrol)
             {
                 controller.stateMachine.ChangeState(EnemyStateType.Patrol);
             }
         }
     }
-   
-    public override void OnExit(EnemyController controller)
+
+    public override void OnExit(EnemyBase controller)
     {
-        Debug.Log($"[EnemyIdleState] OnExit: {controller.name}");
         // Nothing needed
     }
 }

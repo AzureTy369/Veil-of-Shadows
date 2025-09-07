@@ -47,7 +47,7 @@ public class PlayerHealth : MonoBehaviour, IDamageable
 
         KnockbackCounter = knockbackDuration;
         rb.velocity = new Vector2(0, rb.velocity.y);
-        Vector2 newVelocity = new Vector2(knockbackDirection.x * knockbackForce.x, (rb.velocity.y * knockbackDirection.y) + knockbackForce.y);
+        Vector2 newVelocity = new Vector2(knockbackDirection.x * knockbackForce.x, rb.velocity.y + knockbackForce.y);
         rb.velocity = newVelocity;
 
         // Hit stop

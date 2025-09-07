@@ -1,3 +1,4 @@
+// EnemyStateMachine.cs
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -5,14 +6,14 @@ public class EnemyStateMachine : MonoBehaviour
 {
     private Dictionary<EnemyStateType, EnemyState> states;
     private EnemyState currentState;
-    private EnemyController controller;
+    private EnemyBase controller; // Change to EnemyBase
 
     public EnemyStateType CurrentStateType { get; private set; }
     public EnemyState CurrentState => currentState;
 
     private void Awake()
     {
-        controller = GetComponent<EnemyController>();
+        controller = GetComponent<EnemyBase>();
         InitializeStates();
     }
 
@@ -31,7 +32,7 @@ public class EnemyStateMachine : MonoBehaviour
 
     public void ChangeState(EnemyStateType newStateType)
     {
-        Debug.Log($"[EnemyStateMachine] ChangeState: {CurrentStateType} -> {newStateType}");
+        // Giữ lại debug quan trọng khi chuyển trạng thái
         if (CurrentStateType == newStateType && currentState != null) return;
         if (currentState != null)
         {
@@ -47,8 +48,12 @@ public class EnemyStateMachine : MonoBehaviour
 
     private void Update()
     {
-        Debug.Log($"[EnemyStateMachine] Update called for: {controller.name} | currentState: {(currentState != null ? currentState.GetType().Name : "null")}");
-        if (currentState != null && controller && !controller.isDead)
+        if (controller == null)
+        {
+            Debug.LogError("[EnemyStateMachine] controller bị null! Hãy chắc chắn GameObject này có component EnemyBase (GroundEnemy hoặc FlyingEnemy).");
+            return;
+        }
+        if (currentState != null && !controller.isDead)
         {
             currentState.OnUpdate(controller);
         }

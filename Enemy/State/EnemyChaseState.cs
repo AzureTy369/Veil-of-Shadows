@@ -1,3 +1,4 @@
+// EnemyChaseState.cs
 using UnityEngine;
 
 public class EnemyChaseState : EnemyState
@@ -5,13 +6,13 @@ public class EnemyChaseState : EnemyState
     private float loseTargetTimer;
     private const float LOSE_TARGET_TIME = 1f;
 
-    public override void OnEnter(EnemyController controller)
+    public override void OnEnter(EnemyBase controller)
     {
         controller.animator.Play("Run");
         loseTargetTimer = 0f;
     }
 
-    public override void OnUpdate(EnemyController controller)
+    public override void OnUpdate(EnemyBase controller)
     {
         if (!controller.Player)
         {
@@ -24,7 +25,7 @@ public class EnemyChaseState : EnemyState
         {
             controller.animator.Play("Run");
             loseTargetTimer = 0f;
-            
+
             // Check attack range
             if (controller.IsPlayerInAttackRange())
             {
@@ -33,7 +34,7 @@ public class EnemyChaseState : EnemyState
             }
 
             // Move towards player with increased speed
-            controller.MoveTowards(controller.Player.position, 1.5f);
+            controller.MoveTowards(controller.Player.position, controller.Data.chaseSpeedMultiplier);
         }
         else
         {
@@ -41,19 +42,16 @@ public class EnemyChaseState : EnemyState
             controller.animator.Play("Idle");
             // Lost sight of player
             loseTargetTimer += Time.deltaTime;
-            
-            
+
             if (loseTargetTimer >= LOSE_TARGET_TIME)
             {
                 controller.stateMachine.ChangeState(EnemyStateType.Patrol);
                 return;
             }
-
         }
     }
-    
 
-    public override void OnExit(EnemyController controller)
+    public override void OnExit(EnemyBase controller)
     {
         controller.StopMovement();
     }
