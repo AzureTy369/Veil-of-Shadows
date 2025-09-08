@@ -8,6 +8,7 @@ public class EnemyDieState : EnemyState
     {
         controller.animator.Play("Die");
         controller.StopMovement();
+        controller.IsAttacking = false; // Reset trạng thái tấn công nếu chết
 
         // // Disable collider
         // if (controller.GetComponent<Collider2D>())

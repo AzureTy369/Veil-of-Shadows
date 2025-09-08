@@ -8,16 +8,17 @@ public class CollisionDamage : MonoBehaviour
 
     void Awake()
     {
-        enemyBase = GetComponent<EnemyBase>();
+        enemyBase = GetComponentInParent<EnemyBase>();
     }
 
-    void OnCollisionEnter2D(Collision2D other)
+    void OnTriggerEnter2D(Collider2D other)
     {
-        if (enemyBase != null && !hasDamageCollision && other.collider.CompareTag("Player"))
+        // Check if the other object has a Collider and the Player tag
+        if (enemyBase != null && !hasDamageCollision && other != null && other.CompareTag("Player"))
         {
             hasDamageCollision = true;
-            PlayerHealth player = other.collider.GetComponent<PlayerHealth>();
-            PlayerMovement playerM = other.collider.GetComponent<PlayerMovement>();
+            PlayerHealth player = other.GetComponent<PlayerHealth>();
+            PlayerMovement playerM = other.GetComponent<PlayerMovement>();
             if (player != null && playerM != null)
             {
                 DamageCollision(player, playerM.IsFacingRight, playerM.RB);
@@ -35,9 +36,9 @@ public class CollisionDamage : MonoBehaviour
         
     }
 
-    void OnCollisionExit2D(Collision2D other)
+    void OnTriggerExit2D(Collider2D other)
     {
-        if (other.collider.CompareTag("Player"))
+        if (other != null && other.CompareTag("Player"))
         {
             hasDamageCollision = false;
         }

@@ -32,6 +32,7 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     public float currentHealth;
     public bool isDead = false;
     public bool isFacingRight = true;
+    public bool IsAttacking { get; set; } // Thêm biến này để kiểm soát trạng thái tấn công
 
     // Events
     public System.Action<float> OnHealthChanged;
@@ -205,6 +206,8 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     {
         lastAttackTime = Time.time;
         animator.Play("Attack");
+        IsAttacking = true; // Đặt trạng thái tấn công
+
         // Attack logic will be triggered via Animation Event
     }
 
@@ -312,4 +315,10 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     // Properties for easy access
     public Transform Player => playerTransform;
     public EnemyData_SO Data => data;
+
+    // Hàm này sẽ được gọi từ Animation Event ở cuối animation Attack
+    public void OnAttackAnimationEnd()
+    {
+        IsAttacking = false;
+    }
 }

@@ -15,9 +15,11 @@ public class EnemyAttackState : EnemyState
         }
 
         controller.StopMovement();
+        
         if (controller.CanAttack())
         {
             controller.PerformAttack();
+            controller.IsAttacking = true; // Đặt trạng thái tấn công
         }
     }
 
@@ -31,6 +33,6 @@ public class EnemyAttackState : EnemyState
 
     public override void OnExit(EnemyBase controller)
     {
-        // Nothing needed
+        controller.IsAttacking = false; // Reset trạng thái tấn công khi rời khỏi state Attack
     }
 }

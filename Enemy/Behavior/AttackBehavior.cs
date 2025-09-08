@@ -12,6 +12,11 @@ public class AttackBehavior : MonoBehaviour
 
     public void UpdateAttack()
     {
+        if (controller.IsAttacking) // Nếu đang tấn công thì không chuyển state
+        {
+            return;
+        }
+
         if (!controller.Player)
         {
             controller.stateMachine.ChangeState(EnemyStateType.Patrol);

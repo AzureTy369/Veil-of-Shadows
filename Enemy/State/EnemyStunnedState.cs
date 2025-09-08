@@ -12,6 +12,7 @@ public class EnemyStunnedState : EnemyState
         stunDuration = 0.3f; // Shorter stun for better game feel
 
         controller.StopMovement();
+        controller.IsAttacking = false; // Reset trạng thái tấn công nếu bị stun
 
         // Hit animation is already triggered in TakeDamage method
         // No need to trigger it again here
