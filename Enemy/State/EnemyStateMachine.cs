@@ -26,7 +26,8 @@ public class EnemyStateMachine : MonoBehaviour
             { EnemyStateType.Chase, new EnemyChaseState() },
             { EnemyStateType.Attack, new EnemyAttackState() },
             { EnemyStateType.Die, new EnemyDieState() },
-            { EnemyStateType.Stunned, new EnemyStunnedState() }
+            { EnemyStateType.Stunned, new EnemyStunnedState() },
+            { EnemyStateType.Dash, new BossDashState() }
         };
     }
 

@@ -26,7 +26,8 @@ public class EnemyData_SO : ScriptableObject
     [Header("Patrol")]
     public float patrolWaitTime = 2f;
 
-    private void OnValidate()
+    // Đổi private thành protected để lớp con truy cập được
+    protected virtual void OnValidate()
     {
         maxHealth = Mathf.Max(1f, maxHealth);
         moveSpeed = Mathf.Max(0.1f, moveSpeed);

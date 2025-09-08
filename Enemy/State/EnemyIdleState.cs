@@ -38,7 +38,13 @@ public class EnemyIdleState : EnemyState
                 hasPatrol = true;
             }
 
-            if (hasPatrol)
+            // Explicitly skip patrol for DarkWolf - reset idle to loop
+            if (controller is DarkWolf)
+            {
+                idleDuration = Random.Range(1f, 3f); // Reset to loop idle
+                idleTimer = 0f;
+            }
+            else if (hasPatrol)
             {
                 controller.stateMachine.ChangeState(EnemyStateType.Patrol);
             }

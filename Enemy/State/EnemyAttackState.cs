@@ -27,6 +27,16 @@ public class EnemyAttackState : EnemyState
     {
         if (attackBehavior != null)
         {
+            if (controller is DarkWolf darkWolf)
+            {
+                var data = darkWolf.Data as DarkWolfData_SO;
+                if (data != null && darkWolf.normalAttackCount >= data.attacksBeforeDash)
+                {
+                    // Trigger dash instead of normal attack
+                    controller.stateMachine.ChangeState(EnemyStateType.Dash);
+                    return;
+                }
+            }
             attackBehavior.UpdateAttack();
         }
     }

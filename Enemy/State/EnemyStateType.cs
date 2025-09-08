@@ -6,5 +6,6 @@ public enum EnemyStateType
     Chase,
     Attack,
     Die,
-    Stunned
+    Stunned,
+    Dash
 }

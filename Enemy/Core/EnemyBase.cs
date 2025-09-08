@@ -33,6 +33,8 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     public bool isDead = false;
     public bool isFacingRight = true;
     public bool IsAttacking { get; set; } // Thêm biến này để kiểm soát trạng thái tấn công
+    // Thêm biến pendingState để lưu state cần chuyển nếu đang attack
+    public EnemyStateType? pendingState = null;
 
     // Events
     public System.Action<float> OnHealthChanged;
@@ -45,6 +47,7 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
 
     // Timers
     [HideInInspector] public float lastAttackTime = 0f;
+    private bool isFlashing = false;
     protected virtual void Awake()
     {
         InitializeComponents();
@@ -84,7 +87,8 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         currentHealth = data != null ? data.maxHealth : 100f;
     }
 
-    protected virtual void FindPlayer()
+    // Đổi protected thành public để cho phép gọi từ bên ngoài
+    public virtual void FindPlayer()
     {
         if (!playerTransform)
         {
@@ -136,8 +140,20 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         }
         else
         {
-            // Enter stunned state for better hit reaction
-            stateMachine.ChangeState(EnemyStateType.Stunned);
+            // Nếu đang dash thì chỉ flash, KHÔNG stun/ngắt dash
+            if (stateMachine.CurrentStateType == EnemyStateType.Dash)
+            {
+                return;
+            }
+            // Nếu đang attack, không chuyển state ngay mà lưu lại pending
+            if (stateMachine.CurrentStateType == EnemyStateType.Attack && IsAttacking)
+            {
+                pendingState = EnemyStateType.Stunned;
+            }
+            else
+            {
+                stateMachine.ChangeState(EnemyStateType.Stunned);
+            }
         }
     }
 
@@ -150,12 +166,19 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     // Hiệu ứng flash trắng
     private IEnumerator FlashWhite()
     {
+        isFlashing = true;
         spriteRenderer.GetPropertyBlock(_mpb);
         _mpb.SetFloat(FlashAmount, 1f);
         spriteRenderer.SetPropertyBlock(_mpb);
         yield return new WaitForSeconds(0.08f);
         _mpb.SetFloat(FlashAmount, 0f);
         spriteRenderer.SetPropertyBlock(_mpb);
+        isFlashing = false;
+    }
+
+    public IEnumerator WaitForFlashWhite()
+    {
+        yield return new WaitUntil(() => !isFlashing);
     }
 
     public virtual void Die()
@@ -317,8 +340,21 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     public EnemyData_SO Data => data;
 
     // Hàm này sẽ được gọi từ Animation Event ở cuối animation Attack
-    public void OnAttackAnimationEnd()
+    public virtual void OnAttackAnimationEnd()
     {
         IsAttacking = false;
+        
+        // For DarkWolf, increment normal attack count after successful attack
+        if (this is DarkWolf darkWolf)
+        {
+            darkWolf.IncrementNormalAttackCount();
+            // Check if need to trigger dash next time (but actually checked in OnEnter Attack)
+        }
+        // Nếu có pending state thì chuyển state ngay bây giờ
+        if (pendingState.HasValue)
+        {
+            stateMachine.ChangeState(pendingState.Value);
+            pendingState = null;
+        }
     }
 }

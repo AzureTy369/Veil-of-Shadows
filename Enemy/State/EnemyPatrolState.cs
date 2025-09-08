@@ -8,6 +8,12 @@ public class EnemyPatrolState : EnemyState
 
     public override void OnEnter(EnemyBase controller)
     {
+        if (controller is DarkWolf)
+        {
+            controller.stateMachine.ChangeState(EnemyStateType.Idle);
+            return;
+        }
+
         patrolBehavior = controller.GetComponent<PatrolBehavior>();
         flyingBehavior = controller.GetComponent<FlyingBehavior>();
 

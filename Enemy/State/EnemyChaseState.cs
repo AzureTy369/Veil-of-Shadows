@@ -26,7 +26,7 @@ public class EnemyChaseState : EnemyState
             controller.animator.Play("Run");
             loseTargetTimer = 0f;
 
-            // Check attack range
+            // Check attack range - use Attack for all, including DarkWolf (dash via cycle)
             if (controller.IsPlayerInAttackRange())
             {
                 controller.stateMachine.ChangeState(EnemyStateType.Attack);
