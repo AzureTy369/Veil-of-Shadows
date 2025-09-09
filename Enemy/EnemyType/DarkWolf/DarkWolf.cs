@@ -5,6 +5,9 @@ public class DarkWolf : GroundEnemy
 {
     [Header("Boss Cycle")]
     [HideInInspector] public int normalAttackCount = 0;
+    // Thêm tham chiếu quản lý cửa
+    public DoorController doorController;
+    public string doorGroupName;
 
     protected override void ValidateSetup()
     {
@@ -34,5 +37,15 @@ public class DarkWolf : GroundEnemy
     public override void MoveTowards(Vector2 target, float speedMultiplier = 1f)
     {
         base.MoveTowards(target, speedMultiplier);
+    }
+    // Mở cửa khi boss chết
+    public override void Die()
+    {
+        base.Die();
+        if (doorController != null && !string.IsNullOrEmpty(doorGroupName))
+        {
+            doorController.OpenDoors(doorGroupName);
+            doorController.OpenDoors("DoorMap1");
+        }
     }
 }
