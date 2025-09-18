@@ -6,17 +6,23 @@ public class EnemyDieState : EnemyState
 {
     public override void OnEnter(EnemyBase controller)
     {
-        controller.animator.Play("Die");
+        controller.animator.Play("Death");
         controller.StopMovement();
-        controller.IsAttacking = false; // Reset trạng thái tấn công nếu chết
+        controller.IsAttacking = false; 
+        
+        // Disable hitbox child object when enemy dies
+        if (controller.hitboxCollider != null)
+        {
+            controller.hitboxCollider.gameObject.SetActive(false);
+        }
+        // Disable BodyDamage object (CollisionDamage) if exists
+        var bodyDamage = controller.GetComponentInChildren<CollisionDamage>(true);
+        if (bodyDamage != null)
+        {
+            bodyDamage.gameObject.SetActive(false);
+        }
+        
 
-        // // Disable collider
-        // if (controller.GetComponent<Collider2D>())
-        // {
-        //     controller.GetComponent<Collider2D>().enabled = false;
-        // }
-
-        // Start death sequence
         controller.StartCoroutine(DeathSequence(controller));
     }
 
