@@ -11,7 +11,7 @@ public class DarkWolfData_SO : EnemyData_SO
     public float dashCooldown = 0.5f;
     public int attacksBeforeDash = 5; // Number of normal attacks before dash skill
 
-    private void OnValidate()
+    protected override void OnValidate()
     {
         base.OnValidate();
         numDashes = Mathf.Max(1, numDashes);

@@ -10,19 +10,6 @@ public class EnemyDieState : EnemyState
         controller.StopMovement();
         controller.IsAttacking = false; 
         
-        // Disable hitbox child object when enemy dies
-        if (controller.hitboxCollider != null)
-        {
-            controller.hitboxCollider.gameObject.SetActive(false);
-        }
-        // Disable BodyDamage object (CollisionDamage) if exists
-        var bodyDamage = controller.GetComponentInChildren<CollisionDamage>(true);
-        if (bodyDamage != null)
-        {
-            bodyDamage.gameObject.SetActive(false);
-        }
-        
-
         controller.StartCoroutine(DeathSequence(controller));
     }
 
@@ -43,7 +30,14 @@ public class EnemyDieState : EnemyState
 
         // Optional: Drop items, play effects, etc.
 
-        // Destroy the enemy
-        Object.Destroy(controller.gameObject);
+        // Return enemy to pool instead of destroying
+        if (PoolManager.Instance != null)
+        {
+            PoolManager.Instance.ReturnToPool(controller.gameObject);
+        }
+        else
+        {
+            Object.Destroy(controller.gameObject);
+        }
     }
 }

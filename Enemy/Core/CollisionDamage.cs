@@ -13,6 +13,11 @@ public class CollisionDamage : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
+        // Do nothing if enemy is dead
+        if (enemyBase != null && enemyBase.isDead)
+        {
+            return;
+        }
         // Check if the other object has a Collider and the Player tag
         if (enemyBase != null && !hasDamageCollision && other != null && other.CompareTag("Player"))
         {

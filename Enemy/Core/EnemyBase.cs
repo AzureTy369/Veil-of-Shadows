@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 [RequireComponent(typeof(EnemyStateMachine))]
 [RequireComponent(typeof(TeamComponent))]
-public abstract class EnemyBase : MonoBehaviour, IDamageable
+public abstract class EnemyBase : MonoBehaviour, IDamageable, IPoolable
 {
     [Header("Data")]
     public EnemyData_SO data;
@@ -64,6 +64,36 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         ValidateSetup();
         stateMachine.ChangeState(EnemyStateType.Idle);
         rb.sleepMode = RigidbodySleepMode2D.NeverSleep;
+    }
+
+    public virtual void OnSpawnFromPool()
+    {
+        // Reset runtime state
+        isDead = false;
+        IsAttacking = false;
+        pendingState = null;
+        InitializeHealth();
+        FindPlayer();
+        if (rb) rb.velocity = Vector2.zero;
+        if (animator)
+        {
+            animator.Rebind();
+            animator.Update(0f);
+        }
+        // Re-enable hitbox and body damage if present
+        if (hitboxCollider != null) hitboxCollider.gameObject.SetActive(true);
+        var bodyDamage = GetComponentInChildren<CollisionDamage>(true);
+        if (bodyDamage != null) bodyDamage.gameObject.SetActive(true);
+        // Return to idle state
+        if (stateMachine != null) stateMachine.ChangeState(EnemyStateType.Idle);
+        gameObject.SetActive(true);
+    }
+
+    public virtual void OnReturnToPool()
+    {
+        StopAllCoroutines();
+        if (rb) rb.velocity = Vector2.zero;
+        IsAttacking = false;
     }
 
     protected virtual void InitializeComponents()
