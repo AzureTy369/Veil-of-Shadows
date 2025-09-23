@@ -1,34 +1,37 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public enum DoorGroupType { Boss, Map, Puzzle, Other }
-
 public class DoorController : MonoBehaviour
 {
+    [System.Serializable]
+    public class DoorEntry
+    {
+        public ActiveDoor door;
+        public bool startOpen = false; // true: mở khi bắt đầu, false: đóng khi bắt đầu
+    }
+
     [System.Serializable]
     public class DoorGroup
     {
         public string groupName;
-        public DoorGroupType groupType;
-        public List<ActiveDoor> doors;
-        public bool startOpen = false; // true: mở khi bắt đầu, false: đóng khi bắt đầu
+        public List<DoorEntry> doors;
     }
 
     public List<DoorGroup> doorGroups;
 
     void Start()
     {
-        // Đặt trạng thái cửa theo startOpen
+        // Đặt trạng thái cửa theo startOpen riêng từng cửa
         foreach (var group in doorGroups)
         {
-            foreach (var door in group.doors)
+            foreach (var entry in group.doors)
             {
-                if (door != null)
+                if (entry != null && entry.door != null)
                 {
-                    if (group.startOpen)
-                        door.OpenDoor();
+                    if (entry.startOpen)
+                        entry.door.OpenDoor();
                     else
-                        door.CloseDoor();
+                        entry.door.CloseDoor();
                 }
             }
         }
@@ -38,15 +41,15 @@ public class DoorController : MonoBehaviour
     {
         var group = doorGroups.Find(g => g.groupName == groupName);
         if (group != null)
-            foreach (var door in group.doors)
-                if (door != null) door.CloseDoor();
+            foreach (var entry in group.doors)
+                if (entry != null && entry.door != null) entry.door.CloseDoor();
     }
 
     public void OpenDoors(string groupName)
     {
         var group = doorGroups.Find(g => g.groupName == groupName);
         if (group != null)
-            foreach (var door in group.doors)
-                if (door != null) door.OpenDoor();
+            foreach (var entry in group.doors)
+                if (entry != null && entry.door != null) entry.door.OpenDoor();
     }
 }

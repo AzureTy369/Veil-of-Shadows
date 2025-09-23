@@ -45,7 +45,16 @@ public class DarkWolf : GroundEnemy
         if (doorController != null && !string.IsNullOrEmpty(doorGroupName))
         {
             doorController.OpenDoors(doorGroupName);
-            doorController.OpenDoors("DoorMap1");
+            // SetActive(false) cho tất cả các cửa trong group
+            var group = doorController.doorGroups.Find(g => g.groupName == doorGroupName);
+            if (group != null)
+            {
+                foreach (var entry in group.doors)
+                {
+                    if (entry != null && entry.door != null)
+                        entry.door.gameObject.SetActive(false);
+                }
+            }
         }
     }
 }

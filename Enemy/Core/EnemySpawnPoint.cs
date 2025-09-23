@@ -21,6 +21,9 @@ public class EnemySpawnPoint : MonoBehaviour
     [SerializeField] private string patrolPointTag = "PatrolPoint";
     [SerializeField] private Transform patrolPointParent;
 
+    [Header("Boss Door Settings")]
+    public string bossDoorGroupName; // Thêm trường này để Inspector cấu hình tên group cửa cho boss
+
     private Coroutine spawnLoop;
 
     private void Start()
@@ -69,6 +72,14 @@ public class EnemySpawnPoint : MonoBehaviour
             // Spawn enemy từ pool
             GameObject enemy = PoolManager.Instance.Spawn(entry.poolKey, pos, rot, null);
             
+            // Tự động gán DoorController cho boss nếu là DarkWolf
+            var darkWolf = enemy != null ? enemy.GetComponent<DarkWolf>() : null;
+            if (darkWolf != null)
+            {
+                darkWolf.doorController = FindObjectOfType<DoorController>();
+                darkWolf.doorGroupName = entry.bossDoorGroupName; // Lấy group name từ entry
+            }
+
             // Tự động gán patrol points nếu cần
             if (enemy != null && autoAssignPatrolPoints)
             {

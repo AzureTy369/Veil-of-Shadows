@@ -9,24 +9,16 @@ public class CameraControlTrigger : MonoBehaviour
     // Quản lý cửa qua DoorController
     public DoorController doorController;
     public string doorGroupName;
-    // Thêm tham chiếu tới boss nếu cần disable trigger khi boss chết
-    public DarkWolf boss;
-    private bool bossIsDead = false;
-
     private Collider2D _coll;
 
     void Start()
     {
         _coll = GetComponent<Collider2D>();
-        // Đăng ký sự kiện boss chết chỉ 1 lần
-        if (boss != null)
-        {
-            boss.OnDeath += () => bossIsDead = true;
-        }
     }
 
     void OnTriggerEnter2D(Collider2D other)
     {
+
         if(other.CompareTag("Player"))
         {
             if(customInspectorObjects.panCameraOnContact)
@@ -60,16 +52,6 @@ public class CameraControlTrigger : MonoBehaviour
             {
                 CameraManager.instance.PanCameraOnContact(customInspectorObjects.panDistance,
                 customInspectorObjects.panTime, customInspectorObjects.panDirection, true);
-            }
-
-            // Nếu boss đã chết, player đã rời khỏi phòng, tắt trigger
-            if (bossIsDead)
-            {
-                if (doorController != null && !string.IsNullOrEmpty(doorGroupName))
-                {
-                    doorController.OpenDoors(doorGroupName);
-                }
-                gameObject.SetActive(false);
             }
         }
     }
