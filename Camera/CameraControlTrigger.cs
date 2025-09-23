@@ -2,13 +2,9 @@ using UnityEngine;
 using UnityEditor;
 using Unity.Cinemachine;
 
-
 public class CameraControlTrigger : MonoBehaviour
 {
     public CustomInspectorObject customInspectorObjects;
-    // Quản lý cửa qua DoorController
-    public DoorController doorController;
-    public string doorGroupName;
     private Collider2D _coll;
 
     void Start()
@@ -18,14 +14,12 @@ public class CameraControlTrigger : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
-
         if(other.CompareTag("Player"))
         {
             if(customInspectorObjects.panCameraOnContact)
             {
                 CameraManager.instance.PanCameraOnContact(customInspectorObjects.panDistance,
                 customInspectorObjects.panTime, customInspectorObjects.panDirection, false);
-
             }
         }
     }
@@ -41,11 +35,6 @@ public class CameraControlTrigger : MonoBehaviour
             {
                 CameraManager.instance.SwapCamera(customInspectorObjects.cameraOnLeft,
                 customInspectorObjects.cameraOnRight, exitDirection);
-                // Đóng cửa group nếu có
-                if (doorController != null && !string.IsNullOrEmpty(doorGroupName))
-                {
-                    doorController.CloseDoors(doorGroupName);
-                }
             }
 
             if(customInspectorObjects.panCameraOnContact)
