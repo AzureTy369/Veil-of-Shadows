@@ -1,5 +1,8 @@
 using UnityEngine;
 using System.Collections;
+using UnityEngine.UI; // Thêm dòng này nếu HUDController dùng UI
+// Nếu HUDController nằm trong namespace SCRIPTS.UI thì thêm dòng sau:
+// using SCRIPTS.UI;
 
 [RequireComponent(typeof(TeamComponent))]
 public class PlayerHealth : MonoBehaviour, IDamageable
@@ -14,6 +17,9 @@ public class PlayerHealth : MonoBehaviour, IDamageable
     private Rigidbody2D rb;
     [Header("Knockback")]
     public float KnockbackCounter = 0f;
+    // === LIÊN KẾT UI HP ===
+    // Biến tham chiếu tới HUDController để cập nhật UI máu
+    private HUDController hud;
 
 
     private void Awake()
@@ -25,6 +31,20 @@ public class PlayerHealth : MonoBehaviour, IDamageable
         // Đảm bảo teamIndex đúng
         var team = GetComponent<TeamComponent>();
         if (team != null) team.teamIndex = TeamIndex.Player;
+    }
+
+    private void Start()
+    {
+        animator = GetComponentInChildren<Animator>();
+        playerMovement = GetComponent<PlayerMovement>();
+        rb = GetComponent<Rigidbody2D>();
+        currentHealth = stats != null ? stats.maxHealth : 100f;
+        // Đảm bảo teamIndex đúng
+        var team = GetComponent<TeamComponent>();
+        if (team != null) team.teamIndex = TeamIndex.Player;
+        // Tìm HUDController tự động (dễ mở rộng, không hardcode)
+        hud = FindObjectOfType<HUDController>();
+        UpdateHealthUI(); // Cập nhật UI máu lần đầu
     }
 
     private void Update()
@@ -52,6 +72,7 @@ public class PlayerHealth : MonoBehaviour, IDamageable
 
         // Hit stop
         StartCoroutine(HitStopCoroutine());
+        UpdateHealthUI(); // Cập nhật UI máu khi bị damage
         if (currentHealth <= 0)
         {
             Die();
@@ -73,5 +94,14 @@ public class PlayerHealth : MonoBehaviour, IDamageable
         if (playerMovement) playerMovement.SetAnimState(PlayerAnimState.Die);
 
         // Disable movement, v.v. (Có thể thêm logic respawn hoặc game over ở đây)
+    }
+
+    // Hàm cập nhật UI máu, gọi mỗi khi máu thay đổi
+    private void UpdateHealthUI()
+    {
+        if (hud != null && stats != null)
+        {
+            hud.SetHealth(currentHealth, stats.maxHealth);
+        }
     }
 }
