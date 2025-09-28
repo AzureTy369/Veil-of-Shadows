@@ -152,6 +152,10 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable, IPoolable
         currentHealth -= amount;
         currentHealth = Mathf.Max(0, currentHealth);
 
+        // Hiện damage popup
+        if (DamagePopupManager.Instance != null)
+            DamagePopupManager.Instance.ShowDamage(transform.position, amount, Color.red);
+
         OnHealthChanged?.Invoke(currentHealth);
 
         // Flash trắng khi bị trúng đòn

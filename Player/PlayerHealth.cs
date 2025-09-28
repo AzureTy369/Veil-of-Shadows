@@ -55,6 +55,10 @@ public class PlayerHealth : MonoBehaviour, IDamageable
     {
         // Default knockback values (no knockback)
         TakeDamage(amount, Vector2.zero, Vector2.zero, 0f);
+
+        // Hiện damage popup
+        if (DamagePopupManager.Instance != null)
+            DamagePopupManager.Instance.ShowDamage(transform.position, amount, Color.yellow);
     }
 
     public void TakeDamage(float amount, Vector2 knockbackDirection, Vector2 knockbackForce, float knockbackDuration)
