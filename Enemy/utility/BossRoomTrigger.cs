@@ -3,7 +3,7 @@ using UnityEngine;
 public class BossRoomTrigger : MonoBehaviour
 {
     [Header("Boss Spawning")]
-    public EnemySpawnPoint bossSpawnPoint; // Kéo EnemySpawnPoint vào đây
+    public EnemySpawn bossSpawn;
     [Header("Door Control")]
     public DoorController doorController;
     public string doorGroupName;
@@ -18,8 +18,8 @@ public class BossRoomTrigger : MonoBehaviour
             triggered = true;
 
             // Spawn boss khi player vào
-            if (bossSpawnPoint != null)
-                bossSpawnPoint.StartSpawning();
+            if (bossSpawn != null)
+                bossSpawn.SpawnBoss();
 
             // Đóng cửa
             if (doorController != null && !string.IsNullOrEmpty(doorGroupName))

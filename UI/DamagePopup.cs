@@ -32,8 +32,8 @@ public class DamagePopup : MonoBehaviour
 
         if (timer >= duration)
         {
-            if (PoolManager.Instance != null)
-                PoolManager.Instance.ReturnToPool(gameObject);
+            if (ObjectPooling.Instance != null)
+                ObjectPooling.Instance.ReturnToPool(gameObject);
             else
                 Destroy(gameObject);
         }

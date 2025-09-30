@@ -222,6 +222,15 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable, IPoolable
         isDead = true;
         OnDeath?.Invoke();
         stateMachine.ChangeState(EnemyStateType.Die);
+        // Nếu là boss, xử lý mở cửa ở class con (DarkWolf)
+        // Sau khi xong animation chết, trả về pool
+        StartCoroutine(ReturnToPoolAfterDeath());
+    }
+
+    private IEnumerator ReturnToPoolAfterDeath()
+    {
+        yield return new WaitForSeconds(2f); // Chờ animation chết
+        ObjectPooling.Instance.ReturnToPool(gameObject);
     }
 
     #endregion

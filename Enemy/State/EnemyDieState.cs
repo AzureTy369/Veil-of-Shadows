@@ -31,9 +31,9 @@ public class EnemyDieState : EnemyState
         // Optional: Drop items, play effects, etc.
 
         // Return enemy to pool instead of destroying
-        if (PoolManager.Instance != null)
+        if (ObjectPooling.Instance != null)
         {
-            PoolManager.Instance.ReturnToPool(controller.gameObject);
+            ObjectPooling.Instance.ReturnToPool(controller.gameObject);
         }
         else
         {

@@ -1,13 +1,13 @@
 // DarkWolf.cs
 using UnityEngine;
 
-public class DarkWolf : GroundEnemy
+public class DarkWolf : GroundEnemy, IBossWithDoor
 {
     [Header("Boss Cycle")]
     [HideInInspector] public int normalAttackCount = 0;
     // Thêm tham chiếu quản lý cửa
-    public DoorController doorController;
-    public string doorGroupName;
+    public DoorController doorController { get; set; }
+    public string doorGroupName { get; set; }
 
     protected override void ValidateSetup()
     {
@@ -45,7 +45,6 @@ public class DarkWolf : GroundEnemy
         if (doorController != null && !string.IsNullOrEmpty(doorGroupName))
         {
             doorController.OpenDoors(doorGroupName);
-            // SetActive(false) cho tất cả các cửa trong group
             var group = doorController.doorGroups.Find(g => g.groupName == doorGroupName);
             if (group != null)
             {

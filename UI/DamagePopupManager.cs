@@ -15,9 +15,11 @@ public class DamagePopupManager : MonoBehaviour
     {
         Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPos);
         GameObject go = null;
-        if (PoolManager.Instance != null && PoolManager.Instance.HasPool("DamagePopup"))
+        if (ObjectPooling.Instance != null)
         {
-            go = PoolManager.Instance.Spawn("DamagePopup", screenPos, Quaternion.identity, canvas.transform);
+            go = ObjectPooling.Instance.GetObject(damagePopupPrefab, screenPos, Quaternion.identity);
+            go.transform.SetParent(canvas.transform, false);
+            go.transform.position = screenPos;
         }
         else
         {

@@ -43,7 +43,7 @@ public class PlayerHealth : MonoBehaviour, IDamageable
         var team = GetComponent<TeamComponent>();
         if (team != null) team.teamIndex = TeamIndex.Player;
         // Tìm HUDController tự động (dễ mở rộng, không hardcode)
-        hud = FindObjectOfType<HUDController>();
+        hud = Object.FindFirstObjectByType<HUDController>();
         UpdateHealthUI(); // Cập nhật UI máu lần đầu
     }
 
